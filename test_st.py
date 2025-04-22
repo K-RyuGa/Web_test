@@ -104,9 +104,12 @@ st.header("⚡ キャッシュの利用")
 
 @st.cache_data
 def get_data(n):
-    st.toast("データを読み込み中...", icon="🔄")
     tm.sleep(1)
     return pd.DataFrame(np.random.randn(n, 2), columns=["X", "Y"])
+
+# 関数の外で UI を表示
+st.toast("データを読み込み中...", icon="🔄")
+df_cached = get_data(int(n))
 
 n = st.number_input("データ数", min_value=10, max_value=1000, step=10)
 df_cached = get_data(int(n))
