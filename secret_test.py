@@ -191,3 +191,4 @@ if st.session_state.logged_in:
             st.session_state.username = ""
             st.session_state.show_history = False
             st.rerun()
+            
