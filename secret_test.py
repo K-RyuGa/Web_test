@@ -1,20 +1,14 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import gspread
 from google.oauth2.service_account import Credentials
-import json
-
-
 
 # --- Google Sheets 認証 ---
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds_dict = st.secrets["gcp_service_account"]
 credentials = Credentials.from_service_account_info(creds_dict, scopes=scope)
-client = gspread.authorize(credentials)
-sheet = client.open("UserData").sheet1
-
-# --- OpenAI APIキー ---
-openai.api_key = st.secrets["openai"]["api_key"]
+gs_client = gspread.authorize(credentials)
+sheet = gs_client.open("UserData").sheet1
 
 # --- ユーザーが存在するかチェック ---
 def user_exists(username):
@@ -39,7 +33,7 @@ def register_user(username, password):
 # --- メッセージを追記 ---
 def record_message(username, new_message):
     all_users = sheet.get_all_records()
-    for i, user in enumerate(all_users, start=2):
+    for i, user in enumerate(all_users, start=2):  # 2行目からデータ
         if user["username"] == username:
             old_message = user.get("message", "")
             combined = old_message + "\n" + new_message if old_message else new_message
@@ -92,17 +86,25 @@ else:
 
     st.markdown("### 💬 ChatGPTと会話")
     user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg")
+
     if st.button("送信"):
         if user_input.strip():
-            # Chat API呼び出し
-            full_prompt = [{"role": "system", "content": "あなたは親切な日本語学習の先生です。"},
-                           {"role": "user", "content": user_input}]
-            response = openai.ChatCompletion.create(
+            # OpenAI クライアント作成
+            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
+            # プロンプトの作成
+            full_prompt = [
+                {"role": "system", "content": "あなたは親切な日本語学習の先生です。"},
+                {"role": "user", "content": user_input}
+            ]
+
+            # ChatGPT API 呼び出し
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=full_prompt,
                 temperature=0.7,
             )
-            reply = response["choices"][0]["message"]["content"]
+            reply = response.choices[0].message.content
 
             # 表示と保存
             st.markdown("**ChatGPTの返信：**")
@@ -115,6 +117,7 @@ else:
         else:
             st.warning("メッセージが空です。")
 
+    # ログアウト
     if st.button("ログアウト"):
         st.session_state.logged_in = False
         st.session_state.username = ""
