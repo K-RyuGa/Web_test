@@ -48,12 +48,11 @@ def load_message(username):
             return user.get("message", "")
     return ""
 
-# --- セッション管理 ---
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-    st.session_state.username = ""
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+# --- セッション管理初期化 ---
+st.session_state.setdefault("logged_in", False)
+st.session_state.setdefault("username", "")
+st.session_state.setdefault("chat_history", [])
+st.session_state.setdefault("show_history", False)
 
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
@@ -61,6 +60,7 @@ if not st.session_state.logged_in:
     mode = st.radio("モードを選択", ["ログイン", "新規登録"])
     username = st.text_input("ユーザー名")
     password = st.text_input("パスワード", type="password")
+
     if st.button("送信"):
         if mode == "新規登録":
             if register_user(username, password):
@@ -73,47 +73,34 @@ if not st.session_state.logged_in:
             if check_password(username, password):
                 st.session_state.logged_in = True
                 st.session_state.username = username
-                st.session_state.chat_history = [] 
+                st.session_state.chat_history = []
                 st.rerun()
             else:
                 st.error("ユーザー名またはパスワードが間違っています。")
 
 # --- ログイン後のUI ---
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-    st.session_state.username = ""
-if "show_history" not in st.session_state:
-    st.session_state.show_history = False
-
-# --- ログイン後のUI ---
 if st.session_state.logged_in:
     st.title(f"{st.session_state.username} さん、こんにちは！")
 
-    # ==== 画面切替 ====
     if not st.session_state.show_history:
-        # --- チャット画面 ---
         st.markdown("### 💬 ChatGPTと会話")
 
-        # 会話履歴ボタン
+        # 会話履歴を見るボタン
         if st.button("会話履歴を見る"):
             st.session_state.show_history = True
             st.rerun()
 
-        # --- チャット履歴（今回のログイン中のみ表示） ---
+        # --- セッション中の履歴表示 ---
         if st.session_state.chat_history:
             for msg in st.session_state.chat_history:
                 if msg.startswith("ユーザー:"):
                     col1, col2 = st.columns([4, 6])
                     with col2:
                         st.markdown(f"<div style='text-align:right; background:#DCF8C6; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('ユーザー:', '')}</div>", unsafe_allow_html=True)
-                    with col1:
-                        st.write("")
                 elif msg.startswith("AI:"):
                     col1, col2 = st.columns([6, 4])
                     with col1:
                         st.markdown(f"<div style='text-align:left; background:#E6E6EA; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('AI:', '')}</div>", unsafe_allow_html=True)
-                    with col2:
-                        st.write("")
 
         # --- 入力フォーム ---
         user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg")
@@ -132,11 +119,11 @@ if st.session_state.logged_in:
                 )
                 reply = response.choices[0].message.content
 
-                # 今回セッション中の履歴に追加
+                # ローカル履歴に追加
                 st.session_state.chat_history.append(f"ユーザー: {user_input}")
                 st.session_state.chat_history.append(f"AI: {reply}")
 
-                # Google Sheetsにも保存
+                # Google Sheetsに記録
                 full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 record_message(st.session_state.username, full_message)
 
@@ -149,38 +136,37 @@ if st.session_state.logged_in:
             st.session_state.logged_in = False
             st.session_state.username = ""
             st.session_state.show_history = False
+            st.session_state.chat_history = []
             st.rerun()
 
     else:
         # --- 履歴画面 ---
-        st.markdown("**これまでの会話履歴**")
+        st.markdown("### 📜 会話履歴")
         history = load_message(st.session_state.username)
+
         if not history.strip():
             st.info("（会話履歴はまだありません）")
         else:
             messages = [m for m in history.split("\n") if m.strip()]
             for msg in messages:
                 if msg.startswith("ユーザー:"):
-                    col1, col2 = st.columns([6,4])
+                    col1, col2 = st.columns([6, 4])
                     with col1:
-                        st.markdown(f"<div style='text-align:left; background:#DCF8C6; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('ユーザー:','')}</div>", unsafe_allow_html=True)
-                    with col2:
-                        st.write("")
+                        st.markdown(f"<div style='text-align:left; background:#DCF8C6; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('ユーザー:', '')}</div>", unsafe_allow_html=True)
                 elif msg.startswith("AI:"):
-                    col1, col2 = st.columns([4,6])
+                    col1, col2 = st.columns([4, 6])
                     with col2:
-                        st.markdown(f"<div style='text-align:right; background:#E6E6EA; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('AI:','')}</div>", unsafe_allow_html=True)
-                    with col1:
-                        st.write("")
+                        st.markdown(f"<div style='text-align:right; background:#E6E6EA; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('AI:', '')}</div>", unsafe_allow_html=True)
 
-        # チャットに戻るボタン
+        # 戻るボタン
         if st.button("チャットに戻る"):
             st.session_state.show_history = False
             st.rerun()
+
         # ログアウト
         if st.button("ログアウト", key="logout2_btn"):
             st.session_state.logged_in = False
             st.session_state.username = ""
             st.session_state.show_history = False
+            st.session_state.chat_history = []
             st.rerun()
-            
