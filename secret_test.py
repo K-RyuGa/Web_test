@@ -148,7 +148,7 @@ if st.session_state.logged_in:
             st.info("（会話履歴はまだありません）")
         else:
             messages = [m for m in history.split("\n") if m.strip()]
-           for msg in messages:
+            for msg in messages:
                 if msg.startswith("ユーザー:"):
                     col1, col2 = st.columns([6, 4])
                     with col1:
