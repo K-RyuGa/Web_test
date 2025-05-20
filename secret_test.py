@@ -103,6 +103,8 @@ if st.session_state.logged_in:
                         st.markdown(f"<div style='text-align:left; background:#E6E6EA; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('AI:', '')}</div>", unsafe_allow_html=True)
 
         # --- 入力フォーム ---
+        if "input_msg" not in st.session_state:
+            st.session_state.input_msg = ""
         user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg")
 
         if st.button("送信", key="send_btn"):
