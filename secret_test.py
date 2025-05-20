@@ -73,6 +73,7 @@ if not st.session_state.logged_in:
             if check_password(username, password):
                 st.session_state.logged_in = True
                 st.session_state.username = username
+                st.session_state.chat_history = [] 
                 st.rerun()
             else:
                 st.error("ユーザー名またはパスワードが間違っています。")
@@ -98,26 +99,23 @@ if st.session_state.logged_in:
             st.session_state.show_history = True
             st.rerun()
 
-        # チャット履歴（最新5件だけ下に表示、不要ならこのブロック消してOK）
-        history = load_message(st.session_state.username)
-        if history:
-            messages = [m for m in history.split("\n") if m.strip()]
-            recent_msgs = messages[-10:]  # 直近10行
-            for msg in recent_msgs:
+        # --- チャット履歴（今回のログイン中のみ表示） ---
+        if st.session_state.chat_history:
+            for msg in st.session_state.chat_history:
                 if msg.startswith("ユーザー:"):
-                    col1, col2 = st.columns([6,4])
-                    with col1:
-                        st.markdown(f"<div style='text-align:left; background:#DCF8C6; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('ユーザー:','')}</div>", unsafe_allow_html=True)
+                    col1, col2 = st.columns([4, 6])
                     with col2:
+                        st.markdown(f"<div style='text-align:right; background:#DCF8C6; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('ユーザー:', '')}</div>", unsafe_allow_html=True)
+                    with col1:
                         st.write("")
                 elif msg.startswith("AI:"):
-                    col1, col2 = st.columns([4,6])
-                    with col2:
-                        st.markdown(f"<div style='text-align:right; background:#E6E6EA; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('AI:','')}</div>", unsafe_allow_html=True)
+                    col1, col2 = st.columns([6, 4])
                     with col1:
+                        st.markdown(f"<div style='text-align:left; background:#E6E6EA; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('AI:', '')}</div>", unsafe_allow_html=True)
+                    with col2:
                         st.write("")
 
-        # 入力フォーム
+        # --- 入力フォーム ---
         user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg")
 
         if st.button("送信", key="send_btn"):
@@ -134,20 +132,14 @@ if st.session_state.logged_in:
                 )
                 reply = response.choices[0].message.content
 
-                # 表示（左右分割）
-                col1, col2 = st.columns([6,4])
-                with col1:
-                    st.markdown(f"<div style='text-align:left; background:#DCF8C6; padding:8px; border-radius:8px; margin:4px 0'> {user_input}</div>", unsafe_allow_html=True)
-                with col2:
-                    st.write("")
-                col1, col2 = st.columns([4,6])
-                with col2:
-                    st.markdown(f"<div style='text-align:right; background:#E6E6EA; padding:8px; border-radius:8px; margin:4px 0'>{reply}</div>", unsafe_allow_html=True)
-                with col1:
-                    st.write("")
+                # 今回セッション中の履歴に追加
+                st.session_state.chat_history.append(f"ユーザー: {user_input}")
+                st.session_state.chat_history.append(f"AI: {reply}")
 
+                # Google Sheetsにも保存
                 full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 record_message(st.session_state.username, full_message)
+
                 st.rerun()
             else:
                 st.warning("メッセージが空です。")
