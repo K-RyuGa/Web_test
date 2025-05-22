@@ -154,7 +154,7 @@ if st.session_state.logged_in:
                     col1, col2 = st.columns([6, 4])
                     with col1:
                         st.markdown(
-                                f"<div style='text-align:left; background:#E6E6EA; padding:8px; border-radius:8px; margin:2px 0; display:inline-block; max-width:80%'>{msg.replace('AI:', '')}</div>",
+                                f"<div style='text-align:left; background:#E6E6EA; padding:8px; border-radius:8px; margin:2px 0; display:inline-block;width:fit-content; max-width:80%'>{msg.replace('AI:', '')}</div>",
                                 unsafe_allow_html=True
                          )
 
@@ -162,7 +162,7 @@ if st.session_state.logged_in:
                     col1, col2 = st.columns([4, 6])
                     with col2:
                         st.markdown(
-                                f"<div style='text-align:left; background:#DCF8C6; padding:8px; border-radius:8px; margin:2px 0; display:inline-block; max-width:80%'>{msg.replace('ユーザー:', '')}</div>",
+                                f"<div style='text-align:left; background:#DCF8C6; padding:8px; border-radius:8px; margin:2px 0; display:inline-block;width:fit-content; max-width:80%'>{msg.replace('ユーザー:', '')}</div>",
                                 unsafe_allow_html=True
                         )
 
