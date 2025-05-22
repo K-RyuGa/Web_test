@@ -140,6 +140,13 @@ if st.session_state.logged_in:
             st.session_state.chat_history = []
             st.rerun()
 
+    else:
+        # --- 履歴画面 ---
+        st.markdown("### 📜 会話履歴")
+        history = load_message(st.session_state.username)
+
+        if not history.strip():
+            st.info("（会話履歴はまだありません）")
         else:
             messages = [m for m in history.split("\n") if m.strip()]
             for msg in messages:
@@ -186,6 +193,7 @@ if st.session_state.logged_in:
                             """,
                             unsafe_allow_html=True
                         )
+
 
         # 戻るボタン
         if st.button("チャットに戻る"):
