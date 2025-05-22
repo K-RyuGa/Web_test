@@ -141,51 +141,51 @@ if st.session_state.logged_in:
             st.rerun()
 
    else:
-    messages = [m for m in history.split("\n") if m.strip()]
-    for msg in messages:
-        if msg.startswith("ユーザー:"):
-            col1, col2 = st.columns([6, 4])
-            with col1:
-                st.markdown(
-                    f"""
-                    <div style='
-                        background-color: #E6E6EA;
-                        padding: 8px 12px;
-                        border-radius: 8px;
-                        margin: 4px 0;
-                        display: inline-block;
-                        max-width: 80%;
-                        word-wrap: break-word;
-                        text-align: left;
-                        font-size: 16px;
-                    '>
-                        {msg.replace("ユーザー:", "")}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+        messages = [m for m in history.split("\n") if m.strip()]
+        for msg in messages:
+            if msg.startswith("ユーザー:"):
+                col1, col2 = st.columns([6, 4])
+                with col1:
+                    st.markdown(
+                        f"""
+                        <div style='
+                            background-color: #E6E6EA;
+                            padding: 8px 12px;
+                            border-radius: 8px;
+                            margin: 4px 0;
+                            display: inline-block;
+                            max-width: 80%;
+                            word-wrap: break-word;
+                            text-align: left;
+                            font-size: 16px;
+                        '>
+                            {msg.replace("ユーザー:", "")}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
-        elif msg.startswith("AI:"):
-            col1, col2 = st.columns([4, 6])
-            with col2:
-                st.markdown(
-                    f"""
-                    <div style='
-                        background-color: #DCF8C6;
-                        padding: 8px 12px;
-                        border-radius: 8px;
-                        margin: 4px 0;
-                        display: inline-block;
-                        max-width: 80%;
-                        word-wrap: break-word;
-                        text-align: left;
-                        font-size: 16px;
-                    '>
-                        {msg.replace("AI:", "")}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+            elif msg.startswith("AI:"):
+                col1, col2 = st.columns([4, 6])
+                with col2:
+                    st.markdown(
+                        f"""
+                        <div style='
+                            background-color: #DCF8C6;
+                            padding: 8px 12px;
+                            border-radius: 8px;
+                            margin: 4px 0;
+                            display: inline-block;
+                            max-width: 80%;
+                            word-wrap: break-word;
+                            text-align: left;
+                            font-size: 16px;
+                        '>
+                            {msg.replace("AI:", "")}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
         # 戻るボタン
         if st.button("チャットに戻る"):
