@@ -140,31 +140,52 @@ if st.session_state.logged_in:
             st.session_state.chat_history = []
             st.rerun()
 
-    else:
-        # --- 履歴画面 ---
-        st.markdown("### 📜 会話履歴")
-        history = load_message(st.session_state.username)
+   else:
+    messages = [m for m in history.split("\n") if m.strip()]
+    for msg in messages:
+        if msg.startswith("ユーザー:"):
+            col1, col2 = st.columns([6, 4])
+            with col1:
+                st.markdown(
+                    f"""
+                    <div style='
+                        background-color: #E6E6EA;
+                        padding: 8px 12px;
+                        border-radius: 8px;
+                        margin: 4px 0;
+                        display: inline-block;
+                        max-width: 80%;
+                        word-wrap: break-word;
+                        text-align: left;
+                        font-size: 16px;
+                    '>
+                        {msg.replace("ユーザー:", "")}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-        if not history.strip():
-            st.info("（会話履歴はまだありません）")
-        else:
-            messages = [m for m in history.split("\n") if m.strip()]
-            for msg in messages:
-                if msg.startswith("ユーザー:"):
-                    col1, col2 = st.columns([6, 4])
-                    with col1:
-                        st.markdown(
-                                f"<div style='text-align:left; background:#E6E6EA; padding:8px; border-radius:8px; margin:2px 0; display:inline-block;width:fit-content; max-width:80%'>{msg.replace('AI:', '')}</div>",
-                                unsafe_allow_html=True
-                         )
-
-                elif msg.startswith("AI:"):
-                    col1, col2 = st.columns([4, 6])
-                    with col2:
-                        st.markdown(
-                                f"<div style='text-align:left; background:#DCF8C6; padding:8px; border-radius:8px; margin:2px 0; display:inline-block;width:fit-content; max-width:80%'>{msg.replace('ユーザー:', '')}</div>",
-                                unsafe_allow_html=True
-                        )
+        elif msg.startswith("AI:"):
+            col1, col2 = st.columns([4, 6])
+            with col2:
+                st.markdown(
+                    f"""
+                    <div style='
+                        background-color: #DCF8C6;
+                        padding: 8px 12px;
+                        border-radius: 8px;
+                        margin: 4px 0;
+                        display: inline-block;
+                        max-width: 80%;
+                        word-wrap: break-word;
+                        text-align: left;
+                        font-size: 16px;
+                    '>
+                        {msg.replace("AI:", "")}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
         # 戻るボタン
         if st.button("チャットに戻る"):
