@@ -189,13 +189,12 @@ if st.session_state.logged_in:
                     with col2:
                         st.markdown(
                             f"""
-                            <div style='display: flex; justify-content: flex-end; overflow: visible;'>
+                            <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
                                 <div style='
-                                    background-color: #DCF8C6;  /* グリーン */
+                                    background-color: #DCF8C6;
                                     padding: 8px 12px;
-                                    border-radius: 16px;  /* ここを大きめに */
-                                    margin: 4px 0;
-                                    max-width: 100%;
+                                    border-radius: 8px;
+                                    max-width: 80%;
                                     word-wrap: break-word;
                                     text-align: left;
                                     font-size: 16px;
@@ -204,29 +203,28 @@ if st.session_state.logged_in:
                                 </div>
                             </div>
                             """,
-                            unsafe_allow_html=True
+                                unsafe_allow_html=True
                         )
 
                 elif msg.startswith("AI:"):
                     col1, col2 = st.columns([6, 4])  # AIを左に
                     with col1:
                         st.markdown(
-                            f"""
-                            <div style='display: flex; justify-content: flex-start; overflow: visible;'>
-                                <div style='
-                                    background-color: #E6E6EA;  /* グレー */
-                                    padding: 8px 12px;
-                                    border-radius: 16px;  /* ここも同様に大きめに */
-                                    margin: 4px 0;
-                                    max-width: 100%;
-                                    word-wrap: break-word;
-                                    text-align: left;
-                                    font-size: 16px;
-                                '>
-                                    {msg.replace("AI:", "")}
+                             f"""
+                                <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
+                                    <div style='
+                                        background-color: #E6E6EA;
+                                        padding: 8px 12px;
+                                        border-radius: 8px;
+                                        max-width: 80%;
+                                        word-wrap: break-word;
+                                        text-align: left;
+                                        font-size: 16px;
+                                    '>
+                                        {msg.replace("AI:", "")}
+                                    </div>
                                 </div>
-                            </div>
-                            """,
+                                """,
                             unsafe_allow_html=True
                         )
 
