@@ -94,48 +94,47 @@ if st.session_state.logged_in:
         if st.session_state.chat_history:
             for msg in st.session_state.chat_history:
                 if msg.startswith("ユーザー:"):
-                    col1, col2 = st.columns([4, 6])  # ユーザーを右に
-                    with col2:
-                        st.markdown(
-                            f"""
-                            <div style='
-                                background-color: #DCF8C6;
-                                padding: 8px 12px;
-                                border-radius: 8px;
-                                margin: 4px 0;
-                                display: inline-block;
-                                max-width: 80%;
-                                word-wrap: break-word;
-                                text-align: left;
-                                font-size: 16px;
-                            '>
-                                {msg.replace("ユーザー:", "")}
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                    st.markdown(
+                        f"""
+                        <div style='
+                            background-color: #DCF8C6;
+                            padding: 8px 12px;
+                            border-radius: 8px;
+                            margin: 4px 0;
+                            display: inline-block;
+                            max-width: 80%;
+                            word-wrap: break-word;
+                            text-align: left;
+                            font-size: 16px;
+                            margin-left: auto;  /* 右寄せ */
+                        '>
+                            {msg.replace("ユーザー:", "")}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
                 elif msg.startswith("AI:"):
-                    col1, col2 = st.columns([6, 4])  # AIを左に
-                    with col1:
-                        st.markdown(
-                            f"""
-                            <div style='
-                                background-color: #E6E6EA;
-                                padding: 8px 12px;
-                                border-radius: 8px;
-                                margin: 4px 0;
-                                display: inline-block;
-                                max-width: 80%;
-                                word-wrap: break-word;
-                                text-align: left;
-                                font-size: 16px;
-                            '>
-                                {msg.replace("AI:", "")}
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                    st.markdown(
+                        f"""
+                        <div style='
+                            background-color: #E6E6EA;
+                            padding: 8px 12px;
+                            border-radius: 8px;
+                            margin: 4px 0;
+                            display: inline-block;
+                            max-width: 80%;
+                            word-wrap: break-word;
+                            text-align: left;
+                            font-size: 16px;
+                            margin-right: auto;  /* 左寄せ */
+                        '>
+                            {msg.replace("AI:", "")}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
 
 
         # --- 入力フォーム ---
