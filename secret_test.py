@@ -189,18 +189,19 @@ if st.session_state.logged_in:
                     with col2:
                         st.markdown(
                             f"""
-                            <div style='
-                                background-color: #DCF8C6;  /* グリーン */
-                                padding: 8px 12px;
-                                border-radius: 8px;
-                                margin: 4px 0;
-                                display: inline-block;
-                                max-width: 80%;
-                                word-wrap: break-word;
-                                text-align: left;
-                                font-size: 16px;
-                            '>
-                                {msg.replace("ユーザー:", "")}
+                            <div style='display: flex; justify-content: flex-end;'>
+                                <div style='
+                                    background-color: #DCF8C6;  /* グリーン */
+                                    padding: 8px 12px;
+                                    border-radius: 8px;
+                                    margin: 4px 0;
+                                    max-width: 100%;
+                                    word-wrap: break-word;
+                                    text-align: left;
+                                    font-size: 16px;
+                                '>
+                                    {msg.replace("ユーザー:", "")}
+                                </div>
                             </div>
                             """,
                             unsafe_allow_html=True
@@ -211,23 +212,23 @@ if st.session_state.logged_in:
                     with col1:
                         st.markdown(
                             f"""
-                            <div style='
-                                background-color: #E6E6EA;  /* グレー */
-                                padding: 8px 12px;
-                                border-radius: 8px;
-                                margin: 4px 0;
-                                display: inline-block;
-                                max-width: 80%;
-                                word-wrap: break-word;
-                                text-align: left;
-                                font-size: 16px;
-                            '>
-                                {msg.replace("AI:", "")}
+                            <div style='display: flex; justify-content: flex-start;'>
+                                <div style='
+                                    background-color: #E6E6EA;  /* グレー */
+                                    padding: 8px 12px;
+                                    border-radius: 8px;
+                                    margin: 4px 0;
+                                    max-width: 100%;
+                                    word-wrap: break-word;
+                                    text-align: left;
+                                    font-size: 16px;
+                                '>
+                                    {msg.replace("AI:", "")}
+                                </div>
                             </div>
                             """,
                             unsafe_allow_html=True
                         )
-
 
 
         # 戻るボタン
