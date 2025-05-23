@@ -94,13 +94,49 @@ if st.session_state.logged_in:
         if st.session_state.chat_history:
             for msg in st.session_state.chat_history:
                 if msg.startswith("ユーザー:"):
-                    col1, col2 = st.columns([4, 6])
+                    col1, col2 = st.columns([4, 6])  # ユーザーを右に
                     with col2:
-                        st.markdown(f"<div style='text-align:right; background:#DCF8C6; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('ユーザー:', '')}</div>", unsafe_allow_html=True)
+                        st.markdown(
+                            f"""
+                            <div style='
+                                background-color: #DCF8C6;
+                                padding: 8px 12px;
+                                border-radius: 8px;
+                                margin: 4px 0;
+                                display: inline-block;
+                                max-width: 80%;
+                                word-wrap: break-word;
+                                text-align: left;
+                                font-size: 16px;
+                            '>
+                                {msg.replace("ユーザー:", "")}
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
                 elif msg.startswith("AI:"):
-                    col1, col2 = st.columns([6, 4])
+                    col1, col2 = st.columns([6, 4])  # AIを左に
                     with col1:
-                        st.markdown(f"<div style='text-align:left; background:#E6E6EA; padding:8px; border-radius:8px; margin:2px 0'>{msg.replace('AI:', '')}</div>", unsafe_allow_html=True)
+                        st.markdown(
+                            f"""
+                            <div style='
+                                background-color: #E6E6EA;
+                                padding: 8px 12px;
+                                border-radius: 8px;
+                                margin: 4px 0;
+                                display: inline-block;
+                                max-width: 80%;
+                                word-wrap: break-word;
+                                text-align: left;
+                                font-size: 16px;
+                            '>
+                                {msg.replace("AI:", "")}
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
 
         # --- 入力フォーム ---
         if "input_msg" not in st.session_state:
@@ -147,16 +183,16 @@ if st.session_state.logged_in:
 
         if not history.strip():
             st.info("（会話履歴はまだありません）")
-        else:
+       else:
             messages = [m for m in history.split("\n") if m.strip()]
             for msg in messages:
                 if msg.startswith("ユーザー:"):
-                    col1, col2 = st.columns([6, 4])
-                    with col1:
+                    col1, col2 = st.columns([4, 6])  # ユーザーを右に
+                    with col2:
                         st.markdown(
                             f"""
                             <div style='
-                                background-color: #E6E6EA;
+                                background-color: #DCF8C6;  /* グリーン */
                                 padding: 8px 12px;
                                 border-radius: 8px;
                                 margin: 4px 0;
@@ -173,12 +209,12 @@ if st.session_state.logged_in:
                         )
 
                 elif msg.startswith("AI:"):
-                    col1, col2 = st.columns([4, 6])
-                    with col2:
+                    col1, col2 = st.columns([6, 4])  # AIを左に
+                    with col1:
                         st.markdown(
                             f"""
                             <div style='
-                                background-color: #DCF8C6;
+                                background-color: #E6E6EA;  /* グレー */
                                 padding: 8px 12px;
                                 border-radius: 8px;
                                 margin: 4px 0;
@@ -193,6 +229,7 @@ if st.session_state.logged_in:
                             """,
                             unsafe_allow_html=True
                         )
+
 
 
         # 戻るボタン
