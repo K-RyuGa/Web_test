@@ -94,47 +94,46 @@ if st.session_state.logged_in:
         if st.session_state.chat_history:
             for msg in st.session_state.chat_history:
                 if msg.startswith("ユーザー:"):
+                    # ユーザー → 右寄せ（グリーン）
                     st.markdown(
                         f"""
-                        <div style='
-                            background-color: #DCF8C6;
-                            padding: 8px 12px;
-                            border-radius: 8px;
-                            margin: 4px 0;
-                            display: inline-block;
-                            max-width: 80%;
-                            word-wrap: break-word;
-                            text-align: left;
-                            font-size: 16px;
-                            margin-left: auto;  /* 右寄せ */
-                        '>
-                            {msg.replace("ユーザー:", "")}
+                        <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
+                            <div style='
+                                background-color: #DCF8C6;
+                                padding: 8px 12px;
+                                border-radius: 8px;
+                                max-width: 80%;
+                                word-wrap: break-word;
+                                text-align: left;
+                                font-size: 16px;
+                            '>
+                                {msg.replace("ユーザー:", "")}
+                            </div>
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
 
                 elif msg.startswith("AI:"):
+                    # AI → 左寄せ（グレー）
                     st.markdown(
                         f"""
-                        <div style='
-                            background-color: #E6E6EA;
-                            padding: 8px 12px;
-                            border-radius: 8px;
-                            margin: 4px 0;
-                            display: inline-block;
-                            max-width: 80%;
-                            word-wrap: break-word;
-                            text-align: left;
-                            font-size: 16px;
-                            margin-right: auto;  /* 左寄せ */
-                        '>
-                            {msg.replace("AI:", "")}
+                        <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
+                            <div style='
+                                background-color: #E6E6EA;
+                                padding: 8px 12px;
+                                border-radius: 8px;
+                                max-width: 80%;
+                                word-wrap: break-word;
+                                text-align: left;
+                                font-size: 16px;
+                            '>
+                                {msg.replace("AI:", "")}
+                            </div>
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
-
 
 
         # --- 入力フォーム ---
