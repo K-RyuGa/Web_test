@@ -181,7 +181,7 @@ if st.session_state.logged_in:
 
         if not history.strip():
             st.info("（会話履歴はまだありません）")
-        else:
+       else:
             messages = [m for m in history.split("\n") if m.strip()]
             for msg in messages:
                 if msg.startswith("ユーザー:"):
@@ -189,11 +189,11 @@ if st.session_state.logged_in:
                     with col2:
                         st.markdown(
                             f"""
-                            <div style='display: flex; justify-content: flex-end;'>
+                            <div style='display: flex; justify-content: flex-end; overflow: visible;'>
                                 <div style='
                                     background-color: #DCF8C6;  /* グリーン */
                                     padding: 8px 12px;
-                                    border-radius: 8px;
+                                    border-radius: 16px;  /* ここを大きめに */
                                     margin: 4px 0;
                                     max-width: 100%;
                                     word-wrap: break-word;
@@ -212,11 +212,11 @@ if st.session_state.logged_in:
                     with col1:
                         st.markdown(
                             f"""
-                            <div style='display: flex; justify-content: flex-start;'>
+                            <div style='display: flex; justify-content: flex-start; overflow: visible;'>
                                 <div style='
                                     background-color: #E6E6EA;  /* グレー */
                                     padding: 8px 12px;
-                                    border-radius: 8px;
+                                    border-radius: 16px;  /* ここも同様に大きめに */
                                     margin: 4px 0;
                                     max-width: 100%;
                                     word-wrap: break-word;
