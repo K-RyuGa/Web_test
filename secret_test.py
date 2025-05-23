@@ -162,8 +162,7 @@ if st.session_state.logged_in:
                 # Google Sheetsに記録
                 full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 record_message(st.session_state.username, full_message)
-                st.session_state.input_msg = ""
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.warning("メッセージが空です。")
 
