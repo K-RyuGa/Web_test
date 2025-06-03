@@ -83,7 +83,7 @@ if st.session_state.logged_in:
     st.title(f"{st.session_state.username} さん、こんにちは！")
 
     with st.sidebar:
-        st.title("メニュー")
+        st.title("OPTION")
 
         # 会話スタイル選択
         agent_prompts = {
@@ -113,7 +113,7 @@ if st.session_state.logged_in:
             st.session_state.show_history = False
             st.session_state.chat_history = []
             st.rerun()
-        if st.button("チャットに戻る"):
+        if st.button("🔙 チャットに戻る"):
             st.session_state.show_history = False
             st.rerun()
 
