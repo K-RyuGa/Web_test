@@ -84,7 +84,7 @@ if st.session_state.logged_in:
 
     if not st.session_state.show_history:
         
-       with st.sidebar:
+        with st.sidebar:
             st.title("メニュー")
 
             # 会話スタイル選択
