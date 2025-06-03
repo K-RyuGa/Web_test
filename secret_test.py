@@ -118,11 +118,6 @@ if st.session_state.logged_in:
     if not st.session_state.show_history:
         st.markdown("### 💬 ChatGPTと会話")
 
-        # 会話履歴を見るボタン
-        if st.button("会話履歴を見る"):
-            st.session_state.show_history = True
-            st.rerun()
-
         # --- セッション中の履歴表示 ---
         if st.session_state.chat_history:
             for msg in st.session_state.chat_history:
@@ -209,15 +204,6 @@ if st.session_state.logged_in:
             else:
                 st.warning("メッセージが空です。")
 
-
-            # ログアウト
-            if st.button("ログアウト", key="logout_btn"):
-                st.session_state.logged_in = False
-                st.session_state.username = ""
-                st.session_state.show_history = False
-                st.session_state.chat_history = []
-                st.rerun()
-
     else:
         # --- 履歴画面 ---
         st.markdown("### 📜 会話履歴")
@@ -278,10 +264,3 @@ if st.session_state.logged_in:
             st.session_state.show_history = False
             st.rerun()
         
-    # ログアウト
-    if st.button("ログアウト", key="logout2_btn"):
-        st.session_state.logged_in = False
-        st.session_state.username = ""
-        st.session_state.show_history = False
-        st.session_state.chat_history = []
-        st.rerun()
