@@ -184,24 +184,46 @@ if st.session_state.logged_in:
             st.session_state.chat_history = []
             st.rerun()
 
-    else:
-        # --- 履歴画面 ---
-        st.markdown("### 📜 会話履歴")
-        history = load_message(st.session_state.username)
+else:
+    # --- 履歴画面 ---
+    st.markdown("### 📜 会話履歴")
+    history = load_message(st.session_state.username)
 
-        if not history.strip():
-            st.info("（会話履歴はまだありません）")
-        else:
-            messages = [m for m in history.split("\n") if m.strip()]
-            for msg in messages:
-                if msg.startswith("ユーザー:"):
-                    col1, col2 = st.columns([4, 6])  # ユーザーを右に
-                    with col2:
-                        st.markdown(
+    if not history.strip():
+        st.info("（会話履歴はまだありません）")
+    else:
+        messages = [m for m in history.split("\n") if m.strip()]
+        for msg in messages:
+            if msg.startswith("ユーザー:"):
+                col1, col2 = st.columns([4, 6])  # ユーザーを右に
+                with col2:
+                    st.markdown(
+                        f"""
+                        <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
+                            <div style='
+                                background-color: #DCF8C6;
+                                padding: 8px 12px;
+                                border-radius: 8px;
+                                max-width: 80%;
+                                word-wrap: break-word;
+                                text-align: left;
+                                font-size: 16px;
+                            '>
+                                {msg.replace("ユーザー:", "")}
+                            </div>
+                        </div>
+                        """,
+                            unsafe_allow_html=True
+                    )
+
+            elif msg.startswith("AI:"):
+                col1, col2 = st.columns([6, 4])  # AIを左に
+                with col1:
+                    st.markdown(
                             f"""
-                            <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
+                            <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
                                 <div style='
-                                    background-color: #DCF8C6;
+                                    background-color: #E6E6EA;
                                     padding: 8px 12px;
                                     border-radius: 8px;
                                     max-width: 80%;
@@ -209,45 +231,23 @@ if st.session_state.logged_in:
                                     text-align: left;
                                     font-size: 16px;
                                 '>
-                                    {msg.replace("ユーザー:", "")}
+                                    {msg.replace("AI:", "")}
                                 </div>
                             </div>
                             """,
-                                unsafe_allow_html=True
-                        )
-
-                elif msg.startswith("AI:"):
-                    col1, col2 = st.columns([6, 4])  # AIを左に
-                    with col1:
-                        st.markdown(
-                             f"""
-                                <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
-                                    <div style='
-                                        background-color: #E6E6EA;
-                                        padding: 8px 12px;
-                                        border-radius: 8px;
-                                        max-width: 80%;
-                                        word-wrap: break-word;
-                                        text-align: left;
-                                        font-size: 16px;
-                                    '>
-                                        {msg.replace("AI:", "")}
-                                    </div>
-                                </div>
-                                """,
-                            unsafe_allow_html=True
-                        )
+                        unsafe_allow_html=True
+                    )
 
 
-        # 戻るボタン
-        if st.button("チャットに戻る"):
-            st.session_state.show_history = False
-            st.rerun()
+    # 戻るボタン
+    if st.button("チャットに戻る"):
+        st.session_state.show_history = False
+        st.rerun()
 
-        # ログアウト
-        if st.button("ログアウト", key="logout2_btn"):
-            st.session_state.logged_in = False
-            st.session_state.username = ""
-            st.session_state.show_history = False
-            st.session_state.chat_history = []
-            st.rerun()
+    # ログアウト
+    if st.button("ログアウト", key="logout2_btn"):
+        st.session_state.logged_in = False
+        st.session_state.username = ""
+        st.session_state.show_history = False
+        st.session_state.chat_history = []
+        st.rerun()
