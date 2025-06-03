@@ -243,11 +243,11 @@ if st.session_state.logged_in:
         if st.button("チャットに戻る"):
             st.session_state.show_history = False
             st.rerun()
-            
-        # ログアウト
-        if st.button("ログアウト", key="logout2_btn"):
-            st.session_state.logged_in = False
-            st.session_state.username = ""
-            st.session_state.show_history = False
-            st.session_state.chat_history = []
-            st.rerun()
+        
+    # ログアウト
+    if st.button("ログアウト", key="logout2_btn"):
+        st.session_state.logged_in = False
+        st.session_state.username = ""
+        st.session_state.show_history = False
+        st.session_state.chat_history = []
+        st.rerun()
