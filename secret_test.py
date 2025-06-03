@@ -136,35 +136,45 @@ if st.session_state.logged_in:
                     )
 
 
-        # --- 入力フォーム ---
-        if "input_msg" not in st.session_state:
-            st.session_state.input_msg = ""
-        user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg")
+    # --- 入力フォーム ---
+    if "input_msg" not in st.session_state:
+        st.session_state.input_msg = ""
+    user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg")
 
-        if st.button("送信", key="send_btn"):
-            if user_input.strip():
-                client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-                full_prompt = [
-                    {"role": "system", "content": "あなたは親切な日本語学習の先生です。"},
-                    {"role": "user", "content": user_input}
-                ]
-                response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=full_prompt,
-                    temperature=0.7,
-                )
-                reply = response.choices[0].message.content
+    if st.button("送信", key="send_btn"):
+        if user_input.strip():
+            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-                # ローカル履歴に追加
-                st.session_state.chat_history.append(f"ユーザー: {user_input}")
-                st.session_state.chat_history.append(f"AI: {reply}")
+            # ✅ 過去のチャット履歴を messages に変換
+            messages = [{"role": "system", "content": "あなたは親切な日本語学習の先生です。"}]
+            for msg in st.session_state.chat_history:
+                if msg.startswith("ユーザー:"):
+                    messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
+                elif msg.startswith("AI:"):
+                    messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
 
-                # Google Sheetsに記録
-                full_message = f"ユーザー: {user_input}\nAI: {reply}"
-                record_message(st.session_state.username, full_message)
-                st.rerun()
-            else:
-                st.warning("メッセージが空です。")
+            # ✅ 新しい入力を追加
+            messages.append({"role": "user", "content": user_input})
+
+            # ✅ API 呼び出し
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                temperature=0.7,
+            )
+            reply = response.choices[0].message.content
+
+            # 履歴に追加
+            st.session_state.chat_history.append(f"ユーザー: {user_input}")
+            st.session_state.chat_history.append(f"AI: {reply}")
+
+            # Google Sheetsに記録
+            full_message = f"ユーザー: {user_input}\nAI: {reply}"
+            record_message(st.session_state.username, full_message)
+            st.rerun()
+        else:
+            st.warning("メッセージが空です。")
+
 
         # ログアウト
         if st.button("ログアウト", key="logout_btn"):
