@@ -84,7 +84,7 @@ if st.session_state.logged_in:
 
     if not st.session_state.show_history:
         
-        # --- 会話スタイル選択ボタン ---
+        # --- 会話スタイル選択 ---
         st.markdown("### 🤖 会話スタイルを選んでください")
 
         agent_prompts = {
@@ -99,11 +99,13 @@ if st.session_state.logged_in:
             "日本語教師": "あなたは親切な日本語教師です。学習者のレベルに応じて丁寧に解説します。"
         }
 
-        cols = st.columns(3)
-        for i, (label, prompt) in enumerate(agent_prompts.items()):
-            if cols[i % 3].button(label):
-                st.session_state["agent_prompt"] = prompt
-                st.success(f"✅『{label}』スタイルを選択しました")
+        # ドロップダウンで選択
+        style_label = st.selectbox("スタイルを選択", list(agent_prompts.keys()))
+
+        # セッションに保存（最初のチャット送信時だけ変更するようにしてもOK）
+        st.session_state["agent_prompt"] = agent_prompts[style_label]
+        st.info(f"現在の会話スタイル：『{style_label}』")
+
 
         st.markdown("### 💬 ChatGPTと会話")
 
