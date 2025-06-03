@@ -88,7 +88,7 @@ if st.session_state.logged_in:
 
         # 会話スタイル選択
         agent_prompts = {
-            "Home":"ようこそ！サイドバーからチャプターを選ぼう！",
+            "Home":"あなたはゲームのアシスタントです。",
             "Chapter 1: 空港での手続き": "あなたはAIです。",
             "Chapter 2: スーパーでの買い物": "あなたはAIです。",
             "Chapter 3: 友人との会話": "あなたはAIです。",
@@ -98,6 +98,7 @@ if st.session_state.logged_in:
             "Chapter 7: お祭りに参加": "あなたはAIです。",
             "Chapter 8: 市役所での手続き": "あなたはAIです。",
             "Chapter 9: 電車の遅延対応": "あなたはAIです。",
+            "Chapter EX: English mode": "私は英語の練習がしたいです。簡単な単語を意識して私と英語で会話してください",
         }
         style_label = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
         st.session_state["agent_prompt"] = agent_prompts[style_label]
@@ -138,6 +139,7 @@ if st.session_state.logged_in:
         "Chapter 7: お祭りに参加": "この章では、日本のお祭りでの体験や会話を練習します。",
         "Chapter 8: 市役所での手続き": "この章では、市役所での各種手続きに関する会話を学びます。",
         "Chapter 9: 電車の遅延対応": "この章では、電車の遅延時の対応や駅員との会話を練習します。",
+        "Chapter EX: English mode": "英語モード（試）",
     }
 
     # 説明文の取得（選択されていれば表示、そうでなければ空）
@@ -225,7 +227,7 @@ if st.session_state.logged_in:
 
                 # ✅ API 呼び出し
                 response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model="gpt-4o",
                     messages=messages,
                     temperature=0.7,
                 )
@@ -297,7 +299,3 @@ if st.session_state.logged_in:
                                 """,
                             unsafe_allow_html=True
                         )
-
-
-        
-        
