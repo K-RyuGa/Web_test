@@ -89,12 +89,17 @@ if st.session_state.logged_in:
 
             # 会話スタイル選択
             agent_prompts = {
-                "英語で回答": "You are a helpful assistant. Please respond in English.",
-                "ドラえもん風": "あなたはドラえもんの口調で話すAIです。",
-                "関西弁": "あなたは関西弁でフレンドリーに会話するAIです。",
-                "日本語教師": "あなたは親切な日本語教師です。学習者のレベルに応じて丁寧に解説します。"
+                "Chapter 1: 空港での手続き":"あなたはAIです。",
+                "Chapter 2: スーパーでの買い物":"あなたはAIです。",
+                "Chapter 3: 友人との会話":"あなたはAIです。",
+                "Chapter 4: 職場の自己紹介":"あなたはAIです。",
+                "Chapter 5: 病院での診察":"あなたはAIです。",
+                "Chapter 6: 会議での発言":"あなたはAIです。",
+                "Chapter 7: お祭りに参加":"あなたはAIです。",
+                "Chapter 8: 市役所での手続き":"あなたはAIです。",
+                "Chapter 9: 電車の遅延対応":"あなたはAIです。",
             }
-            style_label = st.selectbox("会話スタイル", list(agent_prompts.keys()))
+            style_label = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
             st.session_state["agent_prompt"] = agent_prompts[style_label]
 
             st.markdown("---")
