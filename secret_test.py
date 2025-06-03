@@ -108,8 +108,11 @@ if st.session_state.logged_in:
 
         # ログアウト
         if st.button("🚪 ログアウト"):
-            st.session_state.clear()
-            st.experimental_rerun()
+            st.session_state.logged_in = False
+            st.session_state.username = ""
+            st.session_state.show_history = False
+            st.session_state.chat_history = []
+            st.rerun()
 
 
     if not st.session_state.show_history:
