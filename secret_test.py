@@ -84,27 +84,29 @@ if st.session_state.logged_in:
 
     if not st.session_state.show_history:
         
-        # --- 会話スタイル選択 ---
-        st.markdown("### 🤖 会話スタイルを選んでください")
+       with st.sidebar:
+            st.title("メニュー")
 
-        agent_prompts = {
-            "英語で回答": "You are a helpful assistant. Please respond in English.",
-            "ドラえもん風": "あなたはドラえもんの口調で話すAIです。",
-            "関西弁": "あなたは関西弁でフレンドリーに会話するAIです。",
-            "堅苦しい敬語": "あなたは非常に丁寧で堅苦しい敬語を使うAIです。",
-            "ギャル風": "あなたはギャル語で話す明るく元気なAIです。",
-            "5歳児": "あなたは5歳の子供のような話し方をするAIです。",
-            "時代劇風": "あなたは時代劇の侍のような話し方をするAIです。",
-            "ビジネスマン風": "あなたは礼儀正しいビジネスマンとして話します。",
-            "日本語教師": "あなたは親切な日本語教師です。学習者のレベルに応じて丁寧に解説します。"
-        }
+            # 会話スタイル選択
+            agent_prompts = {
+                "英語で回答": "You are a helpful assistant. Please respond in English.",
+                "ドラえもん風": "あなたはドラえもんの口調で話すAIです。",
+                "関西弁": "あなたは関西弁でフレンドリーに会話するAIです。",
+                "日本語教師": "あなたは親切な日本語教師です。学習者のレベルに応じて丁寧に解説します。"
+            }
+            style_label = st.selectbox("会話スタイル", list(agent_prompts.keys()))
+            st.session_state["agent_prompt"] = agent_prompts[style_label]
 
-        # ドロップダウンで選択
-        style_label = st.selectbox("スタイルを選択", list(agent_prompts.keys()))
+            st.markdown("---")
 
-        # セッションに保存（最初のチャット送信時だけ変更するようにしてもOK）
-        st.session_state["agent_prompt"] = agent_prompts[style_label]
-        st.info(f"現在の会話スタイル：『{style_label}』")
+            # 履歴確認（仮）
+            if st.button("💬 会話履歴を確認"):
+                st.session_state["show_history"] = True  # 例としてフラグを立てる
+
+            # ログアウト
+            if st.button("🚪 ログアウト"):
+                st.session_state.clear()
+                st.experimental_rerun()
 
 
         st.markdown("### 💬 ChatGPTと会話")
