@@ -114,7 +114,7 @@ if st.session_state.logged_in:
             st.session_state.show_history = False
             st.session_state.chat_history = []
             st.rerun()
-       if st.session_state.get("show_history", False):
+        if st.session_state.get("show_history", False):
             # 戻るボタン
             if st.button("チャットに戻る"):
                 st.session_state.show_history = False
