@@ -83,6 +83,28 @@ if st.session_state.logged_in:
     st.title(f"{st.session_state.username} さん、こんにちは！")
 
     if not st.session_state.show_history:
+        
+        # --- 会話スタイル選択ボタン ---
+        st.markdown("### 🤖 会話スタイルを選んでください")
+
+        agent_prompts = {
+            "英語で回答": "You are a helpful assistant. Please respond in English.",
+            "ドラえもん風": "あなたはドラえもんの口調で話すAIです。",
+            "関西弁": "あなたは関西弁でフレンドリーに会話するAIです。",
+            "堅苦しい敬語": "あなたは非常に丁寧で堅苦しい敬語を使うAIです。",
+            "ギャル風": "あなたはギャル語で話す明るく元気なAIです。",
+            "5歳児": "あなたは5歳の子供のような話し方をするAIです。",
+            "時代劇風": "あなたは時代劇の侍のような話し方をするAIです。",
+            "ビジネスマン風": "あなたは礼儀正しいビジネスマンとして話します。",
+            "日本語教師": "あなたは親切な日本語教師です。学習者のレベルに応じて丁寧に解説します。"
+        }
+
+        cols = st.columns(3)
+        for i, (label, prompt) in enumerate(agent_prompts.items()):
+            if cols[i % 3].button(label):
+                st.session_state["agent_prompt"] = prompt
+                st.success(f"✅『{label}』スタイルを選択しました")
+
         st.markdown("### 💬 ChatGPTと会話")
 
         # 会話履歴を見るボタン
@@ -146,7 +168,8 @@ if st.session_state.logged_in:
                 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
                 # ✅ 過去のチャット履歴を messages に変換
-                messages = [{"role": "system", "content": "あなたは親切な日本語学習の先生です。"}]
+                system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
+                messages = [{"role": "system", "content": system_prompt}]
                 for msg in st.session_state.chat_history:
                     if msg.startswith("ユーザー:"):
                         messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
