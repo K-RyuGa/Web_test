@@ -103,7 +103,7 @@ if st.session_state.logged_in:
         st.markdown("---")
 
         # 履歴確認（仮）
-        if st.session_state != True:
+        if not st.session_state.get("show_history", False):
             if st.button("💬 会話履歴を確認"):
                 st.session_state["show_history"] = True  # 例としてフラグを立てる
 
@@ -114,7 +114,7 @@ if st.session_state.logged_in:
             st.session_state.show_history = False
             st.session_state.chat_history = []
             st.rerun()
-        if st.session_state == True:
+       if st.session_state.get("show_history", False):
             # 戻るボタン
             if st.button("チャットに戻る"):
                 st.session_state.show_history = False
