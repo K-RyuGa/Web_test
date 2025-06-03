@@ -117,7 +117,7 @@ if st.session_state.logged_in:
             st.session_state.show_history = False
             st.rerun()
 
-    if not st.sesssion_state.show_history:
+    if not st.session_state.show_history:
         st.markdown("### 💬 ChatGPTと会話")
 
         # --- セッション中の履歴表示 ---
