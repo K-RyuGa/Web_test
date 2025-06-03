@@ -82,38 +82,37 @@ if not st.session_state.logged_in:
 if st.session_state.logged_in:
     st.title(f"{st.session_state.username} さん、こんにちは！")
 
+    with st.sidebar:
+        st.title("メニュー")
+
+        # 会話スタイル選択
+        agent_prompts = {
+            "Chapter 1: 空港での手続き":"あなたはAIです。",
+            "Chapter 2: スーパーでの買い物":"あなたはAIです。",
+            "Chapter 3: 友人との会話":"あなたはAIです。",
+            "Chapter 4: 職場の自己紹介":"あなたはAIです。",
+            "Chapter 5: 病院での診察":"あなたはAIです。",
+            "Chapter 6: 会議での発言":"あなたはAIです。",
+            "Chapter 7: お祭りに参加":"あなたはAIです。",
+            "Chapter 8: 市役所での手続き":"あなたはAIです。",
+            "Chapter 9: 電車の遅延対応":"あなたはAIです。",
+        }
+        style_label = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
+        st.session_state["agent_prompt"] = agent_prompts[style_label]
+
+        st.markdown("---")
+
+        # 履歴確認（仮）
+        if st.button("💬 会話履歴を確認"):
+            st.session_state["show_history"] = True  # 例としてフラグを立てる
+
+        # ログアウト
+        if st.button("🚪 ログアウト"):
+            st.session_state.clear()
+            st.experimental_rerun()
+
+
     if not st.session_state.show_history:
-        
-        with st.sidebar:
-            st.title("メニュー")
-
-            # 会話スタイル選択
-            agent_prompts = {
-                "Chapter 1: 空港での手続き":"あなたはAIです。",
-                "Chapter 2: スーパーでの買い物":"あなたはAIです。",
-                "Chapter 3: 友人との会話":"あなたはAIです。",
-                "Chapter 4: 職場の自己紹介":"あなたはAIです。",
-                "Chapter 5: 病院での診察":"あなたはAIです。",
-                "Chapter 6: 会議での発言":"あなたはAIです。",
-                "Chapter 7: お祭りに参加":"あなたはAIです。",
-                "Chapter 8: 市役所での手続き":"あなたはAIです。",
-                "Chapter 9: 電車の遅延対応":"あなたはAIです。",
-            }
-            style_label = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
-            st.session_state["agent_prompt"] = agent_prompts[style_label]
-
-            st.markdown("---")
-
-            # 履歴確認（仮）
-            if st.button("💬 会話履歴を確認"):
-                st.session_state["show_history"] = True  # 例としてフラグを立てる
-
-            # ログアウト
-            if st.button("🚪 ログアウト"):
-                st.session_state.clear()
-                st.experimental_rerun()
-
-
         st.markdown("### 💬 ChatGPTと会話")
 
         # 会話履歴を見るボタン
