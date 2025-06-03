@@ -80,7 +80,7 @@ if not st.session_state.logged_in:
 
 # --- ログイン後のUI ---
 if st.session_state.logged_in:
-    st.title(f"{st.session_state.username} さん、こんにちは！")
+    st.title(f"NihonGO!")
 
     with st.sidebar:
         st.title("OPTION")
@@ -125,7 +125,7 @@ if st.session_state.logged_in:
             st.rerun()
 
     if not st.session_state.show_history:
-        st.markdown("### 💬 ChatGPTと会話")
+        #st.markdown("### 💬 ")
 
         # --- セッション中の履歴表示 ---
         if st.session_state.chat_history:
@@ -173,45 +173,51 @@ if st.session_state.logged_in:
                     )
 
 
-        # --- 入力フォーム ---
-        if "input_msg" not in st.session_state:
-            st.session_state.input_msg = ""
-        user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg")
+    # --- 入力フォーム ---
+    with st.form(key="chat_form", clear_on_submit=True):
+        col1, col2 = st.columns([5, 1])
+        with col1:
+            user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
+        with col2:
+            submit_button = st.form_submit_button("送信", use_container_width=True)
 
-        if st.button("送信", key="send_btn"):
-            if user_input.strip():
-                client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+    # --- 送信処理 ---
+    if submit_button:
+        if user_input.strip():
+            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-                # ✅ 過去のチャット履歴を messages に変換
-                system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
-                messages = [{"role": "system", "content": system_prompt}]
-                for msg in st.session_state.chat_history:
-                    if msg.startswith("ユーザー:"):
-                        messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
-                    elif msg.startswith("AI:"):
-                        messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
+            # ✅ 過去のチャット履歴を messages に変換
+            system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
+            messages = [{"role": "system", "content": system_prompt}]
+            for msg in st.session_state.get("chat_history", []):
+                if msg.startswith("ユーザー:"):
+                    messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
+                elif msg.startswith("AI:"):
+                    messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
 
-                # ✅ 新しい入力を追加
-                messages.append({"role": "user", "content": user_input})
+            # ✅ 新しい入力を追加
+            messages.append({"role": "user", "content": user_input})
 
-                # ✅ API 呼び出し
-                response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=messages,
-                    temperature=0.7,
-                )
-                reply = response.choices[0].message.content
+            # ✅ API 呼び出し
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                temperature=0.7,
+            )
+            reply = response.choices[0].message.content
 
-                # 履歴に追加
-                st.session_state.chat_history.append(f"ユーザー: {user_input}")
-                st.session_state.chat_history.append(f"AI: {reply}")
+            # 履歴に追加
+            st.session_state.chat_history.append(f"ユーザー: {user_input}")
+            st.session_state.chat_history.append(f"AI: {reply}")
 
-                # Google Sheetsに記録
-                full_message = f"ユーザー: {user_input}\nAI: {reply}"
-                record_message(st.session_state.username, full_message)
-                st.rerun()
-            else:
-                st.warning("メッセージが空です。")
+            # Google Sheetsに記録（関数が定義されている前提）
+            full_message = f"ユーザー: {user_input}\nAI: {reply}"
+            record_message(st.session_state.username, full_message)
+
+            st.rerun()
+        else:
+            st.warning("メッセージが空です。")
+
 
     else:
         # --- 履歴画面 ---
