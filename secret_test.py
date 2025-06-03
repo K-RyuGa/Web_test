@@ -80,7 +80,8 @@ if not st.session_state.logged_in:
 
 # --- ログイン後のUI ---
 if st.session_state.logged_in:
-    st.title(f"NihonGO!")
+    #st.title(f"🗾 NihonGO❕")
+    st.markdown("<h1 style='text-align: center;'>🗾 NihonGO❕</h1>", unsafe_allow_html=True)
 
     with st.sidebar:
         st.title("OPTION")
