@@ -75,7 +75,6 @@ if not st.session_state.logged_in:
                 st.session_state.logged_in = True
                 st.session_state.username = username
                 st.session_state.chat_history = []
-                #st.session_state.clear_screen = False
                 st.rerun()
             else:
                 st.error("ユーザー名またはパスワードが間違っています。")
