@@ -53,7 +53,7 @@ st.session_state.setdefault("logged_in", False)
 st.session_state.setdefault("username", "")
 st.session_state.setdefault("chat_history", [])
 st.session_state.setdefault("show_history", False)
-
+st.session_state.setdefault("clear_screen",False)
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
     st.title("ログイン / 新規登録")
@@ -78,7 +78,7 @@ if not st.session_state.logged_in:
             else:
                 st.error("ユーザー名またはパスワードが間違っています。")
 # --- チャット画面の切り替え処理 ---
-if st.session_state["clear_screen"]:
+if st.session_state.clear_screen:
     st.success("🎉 目標達成！おめでとうございます 🎉")
 
     # 会話履歴から要約用メッセージを作成
