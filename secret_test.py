@@ -66,6 +66,7 @@ if not st.session_state.logged_in:
             if register_user(username, password):
                 st.session_state.logged_in = True
                 st.session_state.username = username
+                st.session_state.clear_screen = False
                 st.rerun()
             else:
                 st.error("そのユーザー名は既に使われています。")
@@ -74,6 +75,7 @@ if not st.session_state.logged_in:
                 st.session_state.logged_in = True
                 st.session_state.username = username
                 st.session_state.chat_history = []
+                st.session_state.clear_screen = False
                 st.rerun()
             else:
                 st.error("ユーザー名またはパスワードが間違っています。")
@@ -124,6 +126,8 @@ if st.session_state.logged_in:
             st.session_state.username = ""
             st.session_state.show_history = False
             st.session_state.chat_history = []
+            st.session_state["clear_screen"] = False
+            reply = ""
             st.rerun()
     
     # --- 説明文定義 ---
@@ -151,7 +155,7 @@ if st.session_state.logged_in:
     
     # --- チャット画面の切り替え処理 ---
     if st.session_state["clear_screen"]:
-        st.success("🎉 目標達成！おめでとうございます 🎉")
+        st.success("目標達成！おめでとうございます！")
 
         # 会話履歴から要約用メッセージを作成
         summary_input = "\n".join(st.session_state.chat_history)
@@ -272,7 +276,7 @@ if st.session_state.logged_in:
                 record_message(st.session_state.username, full_message)
                 if "目標達成" in reply:
                     st.session_state["clear_screen"] = True
-                st.rerun()
+                    st.rerun()
             else:
                 st.warning("メッセージが空です。")
     else:
