@@ -181,7 +181,7 @@ if st.session_state.logged_in:
             st.rerun()
     
     
-    else if not st.session_state.show_history:
+    elif not st.session_state.show_history:
         #st.markdown("### 💬 ")
 
         # --- セッション中の履歴表示 ---
