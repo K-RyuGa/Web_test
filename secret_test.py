@@ -157,7 +157,7 @@ if st.session_state.logged_in:
         summary_input = "\n".join(st.session_state.chat_history)
 
         # 要約用エージェントプロンプト
-        summary_prompt = "以下は日本語学習者とAIとの会話です。この会話の目的と重要なやりとりを簡潔に日本語で要約してください。"
+        summary_prompt = "以下は日本語学習者とAIとの会話です。この会話を日本語教育の観点から評価して"
 
         # 要約実行
         client = OpenAI(api_key=st.secrets["openai"]["api_key"])
@@ -171,7 +171,7 @@ if st.session_state.logged_in:
         )
 
         summary_result = summary_response.choices[0].message.content
-        st.markdown("### 会話のまとめ")
+        st.markdown("### 会話の評価")
         st.markdown(summary_result)
 
         # 「もう一度やる」ボタン
