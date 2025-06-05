@@ -262,7 +262,7 @@ if st.session_state.logged_in:
                     temperature=0.7,
                 )
                 reply = response.choices[0].message.content
-
+           
                 # 履歴に追加
                 st.session_state.chat_history.append(f"ユーザー: {user_input}")
                 st.session_state.chat_history.append(f"AI: {reply}")
@@ -270,7 +270,8 @@ if st.session_state.logged_in:
                 # Google Sheetsに記録（関数が定義されている前提）
                 full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 record_message(st.session_state.username, full_message)
-
+                if "目標達成" in reply:
+                    st.session_state["clear_screen"] = True
                 st.rerun()
             else:
                 st.warning("メッセージが空です。")
