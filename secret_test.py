@@ -77,37 +77,7 @@ if not st.session_state.logged_in:
                 st.rerun()
             else:
                 st.error("ユーザー名またはパスワードが間違っています。")
-# --- チャット画面の切り替え処理 ---
-if st.session_state.clear_screen:
-    st.success("🎉 目標達成！おめでとうございます 🎉")
-
-    # 会話履歴から要約用メッセージを作成
-    summary_input = "\n".join(st.session_state.chat_history)
-
-    # 要約用エージェントプロンプト
-    summary_prompt = "以下は日本語学習者とAIとの会話です。この会話の目的と重要なやりとりを簡潔に日本語で要約してください。"
-
-    # 要約実行
-    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-    summary_response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": summary_prompt},
-            {"role": "user", "content": summary_input}
-        ],
-        temperature=0.5,
-    )
-
-    summary_result = summary_response.choices[0].message.content
-    st.markdown("### 会話のまとめ")
-    st.markdown(summary_result)
-
-    # 「もう一度やる」ボタン
-    if st.button("🔁 最初からやり直す"):
-        st.session_state.chat_history = []
-        st.session_state["clear_screen"] = False
-        st.rerun()
-            
+                            
 # --- ログイン後のUI ---
 if st.session_state.logged_in:
     st.markdown("<h1 style='text-align: center;'>🗾 NihonGO❕</h1>", unsafe_allow_html=True)
@@ -179,7 +149,38 @@ if st.session_state.logged_in:
     if not st.session_state["show_history"] and description:
         st.markdown(f"#### {description}")
     
+    # --- チャット画面の切り替え処理 ---
+    if st.session_state["clear_screen"]:
+        st.success("🎉 目標達成！おめでとうございます 🎉")
 
+        # 会話履歴から要約用メッセージを作成
+        summary_input = "\n".join(st.session_state.chat_history)
+
+        # 要約用エージェントプロンプト
+        summary_prompt = "以下は日本語学習者とAIとの会話です。この会話の目的と重要なやりとりを簡潔に日本語で要約してください。"
+
+        # 要約実行
+        client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+        summary_response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": summary_prompt},
+                {"role": "user", "content": summary_input}
+            ],
+            temperature=0.5,
+        )
+
+        summary_result = summary_response.choices[0].message.content
+        st.markdown("### 会話のまとめ")
+        st.markdown(summary_result)
+
+        # 「もう一度やる」ボタン
+        if st.button("🔁 最初からやり直す"):
+            st.session_state.chat_history = []
+            st.session_state["clear_screen"] = False
+            st.rerun()
+    
+    
     if not st.session_state.show_history:
         #st.markdown("### 💬 ")
 
