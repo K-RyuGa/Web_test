@@ -172,7 +172,10 @@ if st.session_state.logged_in:
         # 説明文の取得（選択されていれば表示、そうでなければ空）
         selected_chapter = style_label  # すでに selectbox で選ばれている
         description = chapter_descriptions.get(selected_chapter, "")
-    
+        
+        if description:
+            #st.markdown("### 💡 シナリオ説明")
+            st.info(description)
     # --- チャット画面の切り替え処理 ---
     elif st.session_state["clear_screen"]:
         st.success("目標達成！おめでとうございます！")
