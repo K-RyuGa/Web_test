@@ -256,14 +256,14 @@ if st.session_state.logged_in:
                     unsafe_allow_html=True
                 )
 
-    if not st.session_state["clear_screen"]:
-        # --- 入力フォーム ---
-        with st.form(key="chat_form", clear_on_submit=True):
-            col1, col2 = st.columns([5, 1])
-            with col1:
-                user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
-            with col2:
-                submit_button = st.form_submit_button("送信", use_container_width=True)
+
+    # --- 入力フォーム ---
+    with st.form(key="chat_form", clear_on_submit=True):
+        col1, col2 = st.columns([5, 1])
+        with col1:
+            user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
+        with col2:
+            submit_button = st.form_submit_button("送信", use_container_width=True)
 
     # --- 送信処理 ---
     if submit_button:
