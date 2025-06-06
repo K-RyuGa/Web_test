@@ -54,6 +54,8 @@ st.session_state.setdefault("username", "")
 st.session_state.setdefault("chat_history", [])
 st.session_state.setdefault("show_history", False)
 st.session_state.setdefault("clear_screen",False)
+st.session_state.setdefault("home",True)
+
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
     st.title("ログイン / 新規登録")
@@ -88,7 +90,7 @@ if st.session_state.logged_in:
 
         # 会話スタイル選択
         agent_prompts = {
-            "Home":"あなたはゲームのアシスタントです。",
+            #"Home":"あなたはゲームのアシスタントです。",
             "Chapter 1: 空港での手続き": "あなたはAIです。",
             "Chapter 2: スーパーでの買い物": "あなたはAIです。",
             "Chapter 3: 友人との会話": "あなたはAIです。",
@@ -128,9 +130,13 @@ if st.session_state.logged_in:
             st.session_state.clear_screen = False
             st.rerun()
     
+    #home画面追加　ゲームの説明とようこそ！という文言、ログイン後この画面に遷移、シナリオが選択されるとチャット画面へ
+    if st.session_state["home"]:
+        st.title("ホーム画面")
+        st.write("ここにゲームの説明やスタート案内などを表示")
     # --- 説明文定義 ---
     chapter_descriptions = {
-        "Home":"ようこそ！サイドバーからチャプターを選ぼう！",
+        #"Home":"ようこそ！サイドバーからチャプターを選ぼう！",
         "Chapter 1: 空港での手続き": "この章では、日本の空港での入国手続きや質問への受け答えを練習します。",
         "Chapter 2: スーパーでの買い物": "この章では、スーパーでの買い物や店員とのやりとりを学びます。",
         "Chapter 3: 友人との会話": "この章では、友人との日常的な会話を練習します。",
@@ -142,17 +148,17 @@ if st.session_state.logged_in:
         "Chapter 9: 電車の遅延対応": "この章では、電車の遅延時の対応や駅員との会話を練習します。",
         "Chapter EX: English mode": "英語モード（試）",
     }
-
-    # 説明文の取得（選択されていれば表示、そうでなければ空）
-    selected_chapter = style_label  # すでに selectbox で選ばれている
-    description = chapter_descriptions.get(selected_chapter, "")
+    if not st.session_state["home"]:
+        # 説明文の取得（選択されていれば表示、そうでなければ空）
+        selected_chapter = style_label  # すでに selectbox で選ばれている
+        description = chapter_descriptions.get(selected_chapter, "")
 
     # ログイン直後は description を空に（履歴画面では出さない）
-    if not st.session_state["show_history"] and description:
+    elif not st.session_state["show_history"] and description:
         st.markdown(f"#### {description}")
     
     # --- チャット画面の切り替え処理 ---
-    if st.session_state["clear_screen"]:
+    elif st.session_state["clear_screen"]:
         st.success("目標達成！おめでとうございます！")
 
         # 会話履歴から要約用メッセージを作成
