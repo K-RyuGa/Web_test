@@ -142,7 +142,6 @@ if st.session_state.logged_in:
 
         st.markdown("### 🧭 遊び方")
         st.markdown("- 画面左の **サイドバー** から、練習したいシチュエーションを選んでください。")
-        st.markdown("- 例：空港での手続き、スーパーでの買い物、友人との会話 など。")
         
         st.markdown("### 📌 ゲームの特徴")
         st.markdown("""
@@ -255,51 +254,51 @@ if st.session_state.logged_in:
                     )
 
 
-        # --- 入力フォーム ---
-        with st.form(key="chat_form", clear_on_submit=True):
-            col1, col2 = st.columns([5, 1])
-            with col1:
-                user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
-            with col2:
-                submit_button = st.form_submit_button("送信", use_container_width=True)
+    # --- 入力フォーム ---
+    with st.form(key="chat_form", clear_on_submit=True):
+        col1, col2 = st.columns([5, 1])
+        with col1:
+            user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
+        with col2:
+            submit_button = st.form_submit_button("送信", use_container_width=True)
 
-        # --- 送信処理 ---
-        if submit_button:
-            if user_input.strip():
-                client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+    # --- 送信処理 ---
+    if submit_button:
+        if user_input.strip():
+            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-                # ✅ 過去のチャット履歴を messages に変換
-                system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
-                messages = [{"role": "system", "content": system_prompt}]
-                for msg in st.session_state.get("chat_history", []):
-                    if msg.startswith("ユーザー:"):
-                        messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
-                    elif msg.startswith("AI:"):
-                        messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
+            # ✅ 過去のチャット履歴を messages に変換
+            system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
+            messages = [{"role": "system", "content": system_prompt}]
+            for msg in st.session_state.get("chat_history", []):
+                if msg.startswith("ユーザー:"):
+                    messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
+                elif msg.startswith("AI:"):
+                    messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
 
-                # ✅ 新しい入力を追加
-                messages.append({"role": "user", "content": user_input})
+            # ✅ 新しい入力を追加
+            messages.append({"role": "user", "content": user_input})
 
-                # ✅ API 呼び出し
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=messages,
-                    temperature=0.7,
-                )
-                reply = response.choices[0].message.content
-           
-                # 履歴に追加
-                st.session_state.chat_history.append(f"ユーザー: {user_input}")
-                st.session_state.chat_history.append(f"AI: {reply}")
+            # ✅ API 呼び出し
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                temperature=0.7,
+            )
+            reply = response.choices[0].message.content
+        
+            # 履歴に追加
+            st.session_state.chat_history.append(f"ユーザー: {user_input}")
+            st.session_state.chat_history.append(f"AI: {reply}")
 
-                # Google Sheetsに記録（関数が定義されている前提）
-                full_message = f"ユーザー: {user_input}\nAI: {reply}"
-                record_message(st.session_state.username, full_message)
-                if "目標達成" in reply:
-                    st.session_state["clear_screen"] = True
-                    st.rerun()
-            else:
-                st.warning("メッセージが空です。")
+            # Google Sheetsに記録（関数が定義されている前提）
+            full_message = f"ユーザー: {user_input}\nAI: {reply}"
+            record_message(st.session_state.username, full_message)
+            if "目標達成" in reply:
+                st.session_state["clear_screen"] = True
+                st.rerun()
+        else:
+            st.warning("メッセージが空です。")
     else:
         # --- 履歴画面 ---
         st.markdown("### 📜 会話履歴")
