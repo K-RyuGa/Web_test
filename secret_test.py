@@ -90,7 +90,7 @@ if st.session_state.logged_in:
 
         # 会話スタイル選択
         agent_prompts = {
-            #"Home":"あなたはゲームのアシスタントです。",
+            "シチュエーション選択":"あなたはゲームのアシスタントです。",
             "Chapter 1: 空港での手続き": "あなたはAIです。",
             "Chapter 2: スーパーでの買い物": "あなたはAIです。",
             "Chapter 3: 友人との会話": "あなたはAIです。",
@@ -103,6 +103,8 @@ if st.session_state.logged_in:
             "Chapter EX: English mode": "私は英語の練習がしたいです。簡単な単語を意識して私と英語で会話してください",
         }
         style_label = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
+        is style_label != "シチュエーション選択":
+            st.session_state["home"] = False
         st.session_state["agent_prompt"] = agent_prompts[style_label]
 
         st.markdown("---")
@@ -154,8 +156,8 @@ if st.session_state.logged_in:
         description = chapter_descriptions.get(selected_chapter, "")
 
     # ログイン直後は description を空に（履歴画面では出さない）
-    elif not st.session_state["show_history"] and description:
-        st.markdown(f"#### {description}")
+    # elif not st.session_state["show_history"] and description:
+    #     st.markdown(f"#### {description}")
     
     # --- チャット画面の切り替え処理 ---
     elif st.session_state["clear_screen"]:
