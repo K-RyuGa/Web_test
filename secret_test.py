@@ -102,7 +102,7 @@ if st.session_state.logged_in:
             "Chapter 9: 電車の遅延対応": "あなたはAIです。",
             "Chapter EX: English mode": "私は英語の練習がしたいです。簡単な単語を意識して私と英語で会話してください",
         }
-        style_label = st.selectbox("", list(agent_prompts.keys()))
+        style_label = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
         if style_label != "シチュエーション選択":
             st.session_state["home"] = False
         st.session_state["agent_prompt"] = agent_prompts[style_label]
@@ -239,90 +239,70 @@ if st.session_state.logged_in:
                         unsafe_allow_html=True
                     )
 
-    with st.form(key="chat_form", clear_on_submit=True):
-        col1, col2 = st.columns([5, 1])
-        with col1:
-            user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
-        with col2:
-            submit_button = st.form_submit_button("送信", use_container_width=True)
 
-    # --- 送信処理 ---
-    if submit_button:
-        if user_input.strip():
-            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+        # --- 入力フォーム ---
+        with st.form(key="chat_form", clear_on_submit=True):
+            col1, col2 = st.columns([5, 1])
+            with col1:
+                user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
+            with col2:
+                submit_button = st.form_submit_button("送信", use_container_width=True)
 
-            # ✅ 過去のチャット履歴を messages に変換
-            system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
-            messages = [{"role": "system", "content": system_prompt}]
-            for msg in st.session_state.get("chat_history", []):
-                if msg.startswith("ユーザー:"):
-                    messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
-                elif msg.startswith("AI:"):
-                    messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
+        # --- 送信処理 ---
+        if submit_button:
+            if user_input.strip():
+                client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-            # ✅ 新しい入力を追加
-            messages.append({"role": "user", "content": user_input})
+                # ✅ 過去のチャット履歴を messages に変換
+                system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
+                messages = [{"role": "system", "content": system_prompt}]
+                for msg in st.session_state.get("chat_history", []):
+                    if msg.startswith("ユーザー:"):
+                        messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
+                    elif msg.startswith("AI:"):
+                        messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
 
-            # ✅ API 呼び出し
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=messages,
-                temperature=0.7,
-            )
-            reply = response.choices[0].message.content
-        
-            # 履歴に追加
-            st.session_state.chat_history.append(f"ユーザー: {user_input}")
-            st.session_state.chat_history.append(f"AI: {reply}")
+                # ✅ 新しい入力を追加
+                messages.append({"role": "user", "content": user_input})
 
-            # Google Sheetsに記録（関数が定義されている前提）
-            full_message = f"ユーザー: {user_input}\nAI: {reply}"
-            record_message(st.session_state.username, full_message)
-            if "目標達成" in reply:
-                st.session_state["clear_screen"] = True
-                st.rerun()
-        else:
-            st.warning("メッセージが空です。")
-else:
-    # --- 履歴画面 ---
-    st.markdown("### 📜 会話履歴")
-    history = load_message(st.session_state.username)
+                # ✅ API 呼び出し
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=messages,
+                    temperature=0.7,
+                )
+                reply = response.choices[0].message.content
+           
+                # 履歴に追加
+                st.session_state.chat_history.append(f"ユーザー: {user_input}")
+                st.session_state.chat_history.append(f"AI: {reply}")
 
-    if not history.strip():
-        st.info("（会話履歴はまだありません）")
+                # Google Sheetsに記録（関数が定義されている前提）
+                full_message = f"ユーザー: {user_input}\nAI: {reply}"
+                record_message(st.session_state.username, full_message)
+                if "目標達成" in reply:
+                    st.session_state["clear_screen"] = True
+                    st.rerun()
+            else:
+                st.warning("メッセージが空です。")
     else:
-        messages = [m for m in history.split("\n") if m.strip()]
-        for msg in messages:
-            if msg.startswith("ユーザー:"):
-                col1, col2 = st.columns([4, 6])  # ユーザーを右に
-                with col2:
-                    st.markdown(
-                        f"""
-                        <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
-                            <div style='
-                                background-color: #DCF8C6;
-                                padding: 8px 12px;
-                                border-radius: 8px;
-                                max-width: 80%;
-                                word-wrap: break-word;
-                                text-align: left;
-                                font-size: 16px;
-                            '>
-                                {msg.replace("ユーザー:", "")}
-                            </div>
-                        </div>
-                        """,
-                            unsafe_allow_html=True
-                    )
+        # --- 履歴画面 ---
+        st.markdown("### 📜 会話履歴")
+        history = load_message(st.session_state.username)
 
-            elif msg.startswith("AI:"):
-                col1, col2 = st.columns([6, 4])  # AIを左に
-                with col1:
-                    st.markdown(
+        if not history.strip():
+            st.info("（会話履歴はまだありません）")
+        else:
+            messages = [m for m in history.split("\n") if m.strip()]
+            for msg in messages:
+                if msg.startswith("ユーザー:"):
+                    col1, col2 = st.columns([4, 6])  # ユーザーを右に
+                    with col2:
+                        st.markdown(
                             f"""
-                            <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
+                            <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
                                 <div style='
-                                    background-color: #E6E6EA;
+                                    background-color: #DCF8C6;
                                     padding: 8px 12px;
                                     border-radius: 8px;
                                     max-width: 80%;
@@ -330,9 +310,31 @@ else:
                                     text-align: left;
                                     font-size: 16px;
                                 '>
-                                    {msg.replace("AI:", "")}
+                                    {msg.replace("ユーザー:", "")}
                                 </div>
                             </div>
                             """,
-                        unsafe_allow_html=True
-                    )
+                                unsafe_allow_html=True
+                        )
+
+                elif msg.startswith("AI:"):
+                    col1, col2 = st.columns([6, 4])  # AIを左に
+                    with col1:
+                        st.markdown(
+                                f"""
+                                <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
+                                    <div style='
+                                        background-color: #E6E6EA;
+                                        padding: 8px 12px;
+                                        border-radius: 8px;
+                                        max-width: 80%;
+                                        word-wrap: break-word;
+                                        text-align: left;
+                                        font-size: 16px;
+                                    '>
+                                        {msg.replace("AI:", "")}
+                                    </div>
+                                </div>
+                                """,
+                            unsafe_allow_html=True
+                        )
