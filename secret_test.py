@@ -130,12 +130,13 @@ if st.session_state.logged_in:
             st.session_state.show_history = False
             st.session_state.chat_history = []
             st.session_state.clear_screen = False
+            st.session_state.home = True
             st.rerun()
-    
-    #home画面追加　ゲームの説明とようこそ！という文言、ログイン後この画面に遷移、シナリオが選択されるとチャット画面へ
+
     if st.session_state["home"]:
         st.title("ホーム画面")
         st.write("ここにゲームの説明やスタート案内などを表示")
+        
     # --- 説明文定義 ---
     chapter_descriptions = {
         "シナリオ選択":"",
@@ -154,10 +155,6 @@ if st.session_state.logged_in:
         # 説明文の取得（選択されていれば表示、そうでなければ空）
         selected_chapter = style_label  # すでに selectbox で選ばれている
         description = chapter_descriptions.get(selected_chapter, "")
-
-    # ログイン直後は description を空に（履歴画面では出さない）
-    # elif not st.session_state["show_history"] and description:
-    #     st.markdown(f"#### {description}")
     
     # --- チャット画面の切り替え処理 ---
     elif st.session_state["clear_screen"]:
