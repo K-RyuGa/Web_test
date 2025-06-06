@@ -212,7 +212,7 @@ if st.session_state.logged_in:
        #st.markdown("### 💬 ")
 
     # --- セッション中の履歴表示 ---
-    if st.session_state.chat_history:
+    if st.session_state.chat_history and not st.session_state["clear_screen"]:
         for msg in st.session_state.chat_history:
             if msg.startswith("ユーザー:"):
                 # ユーザー → 右寄せ（グリーン）
@@ -256,14 +256,14 @@ if st.session_state.logged_in:
                     unsafe_allow_html=True
                 )
 
-
-    # --- 入力フォーム ---
-    with st.form(key="chat_form", clear_on_submit=True):
-        col1, col2 = st.columns([5, 1])
-        with col1:
-            user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
-        with col2:
-            submit_button = st.form_submit_button("送信", use_container_width=True)
+    if not st.session_state["clear_screen"]:
+        # --- 入力フォーム ---
+        with st.form(key="chat_form", clear_on_submit=True):
+            col1, col2 = st.columns([5, 1])
+            with col1:
+                user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
+            with col2:
+                submit_button = st.form_submit_button("送信", use_container_width=True)
 
     # --- 送信処理 ---
     if submit_button:
