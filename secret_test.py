@@ -299,7 +299,7 @@ if st.session_state.logged_in:
                 st.rerun()
         else:
             st.warning("メッセージが空です。")
-    else:
+    elif st.session_state.show_history:
         # --- 履歴画面 ---
         st.markdown("### 📜 会話履歴")
         history = load_message(st.session_state.username)
