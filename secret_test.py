@@ -103,7 +103,7 @@ if st.session_state.logged_in:
             "Chapter EX: English mode": "私は英語の練習がしたいです。簡単な単語を意識して私と英語で会話してください",
         }
         style_label = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
-        is style_label != "シチュエーション選択":
+        if style_label != "シチュエーション選択":
             st.session_state["home"] = False
         st.session_state["agent_prompt"] = agent_prompts[style_label]
 
