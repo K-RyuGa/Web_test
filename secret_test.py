@@ -104,11 +104,8 @@ if st.session_state.logged_in:
             "Chapter EX: English mode": "私は英語の練習がしたいです。簡単な単語を意識して私と英語で会話してください",
         }
         style_label = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
-        if style_label != "シチュエーション選択":
-            st.session_state["home"] = False
-            st.session_state["chat"] = True
-        st.session_state["agent_prompt"] = agent_prompts[style_label]
 
+        st.session_state["agent_prompt"] = agent_prompts[style_label]
         st.markdown("---")
 
         # show_historyが未定義ならFalseで初期化
@@ -176,6 +173,11 @@ if st.session_state.logged_in:
         st.info("まずは左のサイドバーから、練習したいシチュエーションを選んでみましょう！")
         st.markdown("### 💬 質問がある場合")
         st.write("画面下のチャット欄に質問を入力してください。できる限り丁寧にお答えします。")
+        
+        if style_label != "シチュエーション選択":
+            st.session_state["home"] = False
+            st.session_state["chat"] = True
+            st.rerun()
         
     # --- 説明文定義 ---
     chapter_descriptions = {
