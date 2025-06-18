@@ -55,6 +55,7 @@ st.session_state.setdefault("chat_history", [])
 st.session_state.setdefault("show_history", False)
 st.session_state.setdefault("clear_screen",False)
 st.session_state.setdefault("home",True)
+st.session_state.setdefault("chat",False)
 
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
@@ -116,23 +117,44 @@ if st.session_state.logged_in:
         # チャット中は「履歴を見る」ボタンを表示、履歴中は「戻る」ボタンを表示
         if not st.session_state["show_history"]:
             if st.button("💬 会話履歴を確認"):
+                
                 st.session_state["show_history"] = True
                 st.session_state["home"] = False
+                st.session_state["logged_in"] = True
+                st.session_state["username"] = False
+                st.session_state["chat_history"] = False
+                st.session_state["clear_screen"] = False
+                st.session_state["chat"] = False
+                
                 st.rerun()
         else:
-            if st.button("🔙 チャットに戻る"):
+            if st.button("🔙 Homeに戻る"):
+                
                 st.session_state["show_history"] = False
-                st.session_state["home"] = False
+                st.session_state["home"] = True
+                st.session_state["logged_in"] = True
+                #st.session_state["username"] = False
+                st.session_state["chat_history"] = False
+                st.session_state["clear_screen"] = False
+                st.session_state["chat"] = False
+
+                
                 st.rerun()
 
         # ログアウト
         if st.button("🚪 ログアウト"):
+        
+            st.session_state["show_history"] = False
+            st.session_state["home"] = True
+            st.session_state["logged_in"] = False
+            st.session_state["username"] = False
+            st.session_state["chat_history"] = False
+            st.session_state["clear_screen"] = False
+            st.session_state["chat"] = False
             st.session_state.logged_in = False
             st.session_state.username = ""
-            st.session_state.show_history = False
             st.session_state.chat_history = []
-            st.session_state.clear_screen = False
-            st.session_state.home = True
+            
             st.rerun()
 
     if st.session_state["home"]:
@@ -170,14 +192,13 @@ if st.session_state.logged_in:
         "Chapter 9: 電車の遅延対応": "この章では、電車の遅延時の対応や駅員との会話を練習します。",
         "Chapter EX: English mode": "英語モード（試）",
     }
-    if not st.session_state["home"] and not st.session_state["clear_screen"]:
-        # 説明文の取得（選択されていれば表示、そうでなければ空）
+    if not st.session_state["home"]:
+        
         selected_chapter = style_label  # すでに selectbox で選ばれている
         description = chapter_descriptions.get(selected_chapter, "")
-        
         if description:
-            #st.markdown("### 💡 シナリオ説明")
             st.info(description)
+            
     # --- チャット画面の切り替え処理 ---
     elif st.session_state["clear_screen"]:
         st.success("目標達成！おめでとうございます！")
@@ -205,8 +226,16 @@ if st.session_state.logged_in:
 
         # 「もう一度やる」ボタン
         if st.button("🔁 最初からやり直す"):
+            
             st.session_state.chat_history = []
             st.session_state["clear_screen"] = False
+            st.session_state["show_history"] = False
+            st.session_state["home"] = True
+            st.session_state["logged_in"] = False
+            st.session_state["username"] = False
+            st.session_state["chat_history"] = False
+            st.session_state["clear_screen"] = False
+            
             st.rerun()
     
     
@@ -214,7 +243,7 @@ if st.session_state.logged_in:
        #st.markdown("### 💬 ")
 
     # --- セッション中の履歴表示 ---
-    if st.session_state.chat_history and not st.session_state["clear_screen"]:
+    if st.session_state.chat_history:
         for msg in st.session_state.chat_history:
             if msg.startswith("ユーザー:"):
                 # ユーザー → 右寄せ（グリーン）
@@ -260,7 +289,7 @@ if st.session_state.logged_in:
 
 
     # --- 入力フォーム ---
-    if not st.session_state["clear_screen"]:
+    if st.session_state["chat"]:
         with st.form(key="chat_form", clear_on_submit=True):
             col1, col2 = st.columns([5, 1])
             with col1:
@@ -302,10 +331,14 @@ if st.session_state.logged_in:
                 record_message(st.session_state.username, full_message)
                 if "目標達成" in reply:
                     st.session_state["clear_screen"] = True
+                    st.session_state["chat"] = False
                     st.rerun()
             else:
                 st.warning("メッセージが空です。")
             
+            
+            
+    #完了
     elif st.session_state.show_history:
         # --- 履歴画面 ---
         st.markdown("### 📜 会話履歴")
