@@ -31,13 +31,19 @@ def register_user(username, password):
     return True
 
 # --- メッセージを追記 ---
-def record_message(username, new_message,where):
+def record_message(username, new_message, where):
     all_users = sheet.get_all_records()
-    for i, user in enumerate(all_users, start=2):  # 2行目からデータ
+    headers = sheet.row_values(1)  # 1行目のヘッダーを取得
+    if where not in headers:
+        raise ValueError(f"列 '{where}' がシートに存在しません。")
+
+    col_index = headers.index(where) + 1  # 1-based index に変換（例: 0 → 1列目）
+
+    for i, user in enumerate(all_users, start=2):  # データは2行目から
         if user["username"] == username:
             old_message = user.get(where, "")
             combined = old_message + "\n" + new_message if old_message else new_message
-            sheet.update_cell(i, 3, combined)
+            sheet.update_cell(i, col_index, combined)  # ← 動的に列を指定
             break
 
 # --- メッセージ履歴を取得 ---
@@ -239,9 +245,9 @@ if st.session_state.logged_in:
             st.session_state.chat_history = []
             st.session_state["clear_screen"] = False
             st.session_state["show_history"] = False
-            st.session_state["home"] = True
-            st.session_state["logged_in"] = False
-            st.session_state["clear_screen"] = False
+            st.session_state["home"] = False
+            st.session_state["logged_in"] = True
+            st.session_state["chat"] = True
             
             st.rerun()
     
