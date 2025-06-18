@@ -117,10 +117,12 @@ if st.session_state.logged_in:
         if not st.session_state["show_history"]:
             if st.button("💬 会話履歴を確認"):
                 st.session_state["show_history"] = True
+                st.session_state["home"] = False
                 st.rerun()
         else:
             if st.button("🔙 チャットに戻る"):
                 st.session_state["show_history"] = False
+                st.session_state["home"] = False
                 st.rerun()
 
         # ログアウト
