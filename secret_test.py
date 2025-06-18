@@ -330,6 +330,7 @@ if st.session_state.logged_in:
                     st.session_state["clear_screen"] = True
                     st.session_state["chat"] = False
                     st.rerun()
+                st.rerun()
             else:
                 st.warning("メッセージが空です。")
             
