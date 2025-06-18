@@ -208,8 +208,7 @@ if st.session_state.logged_in:
         if description:
             st.info(description)
             
-    # --- チャット画面の切り替え処理 ---
-    elif st.session_state["clear_screen"]:
+    if st.session_state["clear_screen"]:
         st.success("目標達成！おめでとうございます！")
 
         # 会話履歴から要約用メッセージを作成
@@ -340,6 +339,7 @@ if st.session_state.logged_in:
                 if "目標達成" in reply and not st.session_state["home"]:
                     st.session_state["clear_screen"] = True
                     st.session_state["chat"] = False
+                    st.session_state["chat_histry"] = []
                     st.rerun()
                 st.rerun()
             else:
