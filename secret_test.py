@@ -223,7 +223,7 @@ if st.session_state.logged_in:
         summary_result = summary_response.choices[0].message.content
         st.markdown("### 会話の評価")
         st.markdown(summary_result)
-        record_message(st.session_state.username, summary_result,eval)
+        record_message(st.session_state.username, summary_result,"eval")
 
         # 「もう一度やる」ボタン
         if st.button("🔁 最初からやり直す"):
@@ -328,7 +328,7 @@ if st.session_state.logged_in:
 
                 # Google Sheetsに記録（関数が定義されている前提）
                 full_message = f"ユーザー: {user_input}\nAI: {reply}"
-                record_message(st.session_state.username, full_message,message)
+                record_message(st.session_state.username, full_message,"message")
                 if "目標達成" in reply and not st.session_state["home"]:
                     st.session_state["clear_screen"] = True
                     st.session_state["chat"] = False
