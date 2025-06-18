@@ -192,7 +192,7 @@ if st.session_state.logged_in:
         "Chapter 9: 電車の遅延対応": "この章では、電車の遅延時の対応や駅員との会話を練習します。",
         "Chapter EX: English mode": "英語モード（試）",
     }
-    if not st.session_state["home"]:
+    if not st.session_state["home"] and not st.session_state["show_history"]:
         
         selected_chapter = style_label  # すでに selectbox で選ばれている
         description = chapter_descriptions.get(selected_chapter, "")
