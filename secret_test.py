@@ -107,7 +107,6 @@ if st.session_state.logged_in:
         if style_label != "シチュエーション選択":
             st.session_state["home"] = False
             st.session_state["chat"] = True
-            st.rerun()
         st.session_state["agent_prompt"] = agent_prompts[style_label]
 
         st.markdown("---")
