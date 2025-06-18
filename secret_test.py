@@ -329,7 +329,7 @@ if st.session_state.logged_in:
                 # Google Sheetsに記録（関数が定義されている前提）
                 full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 record_message(st.session_state.username, full_message,message)
-                if "目標達成" in reply and not st.session_state = ["home"]:
+                if "目標達成" in reply and not st.session_state == ["home"]:
                     st.session_state["clear_screen"] = True
                     st.session_state["chat"] = False
                     st.rerun()
