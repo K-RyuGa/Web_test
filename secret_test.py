@@ -121,7 +121,6 @@ if st.session_state.logged_in:
                 st.session_state["show_history"] = True
                 st.session_state["home"] = False
                 st.session_state["logged_in"] = True
-                st.session_state["username"] = False
                 st.session_state["chat_history"] = False
                 st.session_state["clear_screen"] = False
                 st.session_state["chat"] = False
@@ -133,7 +132,6 @@ if st.session_state.logged_in:
                 st.session_state["show_history"] = False
                 st.session_state["home"] = True
                 st.session_state["logged_in"] = True
-                #st.session_state["username"] = False
                 st.session_state["chat_history"] = False
                 st.session_state["clear_screen"] = False
                 st.session_state["chat"] = False
@@ -232,7 +230,6 @@ if st.session_state.logged_in:
             st.session_state["show_history"] = False
             st.session_state["home"] = True
             st.session_state["logged_in"] = False
-            st.session_state["username"] = False
             st.session_state["chat_history"] = False
             st.session_state["clear_screen"] = False
             
