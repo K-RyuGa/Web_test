@@ -286,7 +286,7 @@ if st.session_state.logged_in:
 
 
     # --- 入力フォーム ---
-    if st.session_state["chat"]:
+    if st.session_state["chat"] and st.session_state[home]:
         with st.form(key="chat_form", clear_on_submit=True):
             col1, col2 = st.columns([5, 1])
             with col1:
