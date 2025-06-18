@@ -31,11 +31,11 @@ def register_user(username, password):
     return True
 
 # --- メッセージを追記 ---
-def record_message(username, new_message):
+def record_message(username, new_message,where):
     all_users = sheet.get_all_records()
     for i, user in enumerate(all_users, start=2):  # 2行目からデータ
         if user["username"] == username:
-            old_message = user.get("message", "")
+            old_message = user.get(where, "")
             combined = old_message + "\n" + new_message if old_message else new_message
             sheet.update_cell(i, 3, combined)
             break
@@ -221,6 +221,7 @@ if st.session_state.logged_in:
         summary_result = summary_response.choices[0].message.content
         st.markdown("### 会話の評価")
         st.markdown(summary_result)
+        record_message(st.session_state.username, summary_result,eval)
 
         # 「もう一度やる」ボタン
         if st.button("🔁 最初からやり直す"):
@@ -325,7 +326,7 @@ if st.session_state.logged_in:
 
                 # Google Sheetsに記録（関数が定義されている前提）
                 full_message = f"ユーザー: {user_input}\nAI: {reply}"
-                record_message(st.session_state.username, full_message)
+                record_message(st.session_state.username, full_message,message)
                 if "目標達成" in reply and not st.session_state = ["home"]:
                     st.session_state["clear_screen"] = True
                     st.session_state["chat"] = False
@@ -335,8 +336,7 @@ if st.session_state.logged_in:
                 st.warning("メッセージが空です。")
             
             
-            
-    #完了
+        
     elif st.session_state.show_history:
         # --- 履歴画面 ---
         st.markdown("### 📜 会話履歴")
