@@ -346,7 +346,7 @@ if st.session_state.logged_in:
                 st.session_state.chat_history.append(f"AI: {reply}")
 
                 # Google Sheetsに記録（関数が定義されている前提）
-                if flag = 0:
+                if flag == 0:
                     now = time.strftime('%Y/%m/%d %H:%M')
                     full_message = style_label + now + "\n" + f"ユーザー: {user_input}\nAI: {reply}"
                     flag = 1
