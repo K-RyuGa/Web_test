@@ -2,6 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import gspread
 from google.oauth2.service_account import Credentials
+import time
 
 # --- Google Sheets 認証 ---
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -166,6 +167,9 @@ if st.session_state.logged_in:
             st.rerun()
 
     if st.session_state["home"]:
+        
+        flag = 0
+        
         st.title("ホーム画面")
     
         st.subheader("🎮 日本語学習シミュレーションゲームへようこそ！")
@@ -213,6 +217,9 @@ if st.session_state.logged_in:
             st.info(description)
             
     if st.session_state["clear_screen"]:
+        
+        flag = 0
+        
         st.success("目標達成！おめでとうございます！")
 
         # 会話履歴から要約用メッセージを作成
@@ -246,6 +253,7 @@ if st.session_state.logged_in:
             st.session_state["home"] = False
             st.session_state["logged_in"] = True
             st.session_state["chat"] = True
+            flag = 0
             
             st.rerun()
     
@@ -338,7 +346,13 @@ if st.session_state.logged_in:
                 st.session_state.chat_history.append(f"AI: {reply}")
 
                 # Google Sheetsに記録（関数が定義されている前提）
-                full_message = f"ユーザー: {user_input}\nAI: {reply}"
+                if flag = 0:
+                    now = time.strftime('%Y/%m/%d %H:%M')
+                    full_message = style_label + now + "\n" + f"ユーザー: {user_input}\nAI: {reply}"
+                    flag = 1
+                else:
+                    full_message = f"ユーザー: {user_input}\nAI: {reply}"
+                
                 record_message(st.session_state.username, full_message,"message")
                 if "目標達成" in reply and not st.session_state["home"]:
                     st.session_state["clear_screen"] = True
@@ -404,3 +418,5 @@ if st.session_state.logged_in:
                                 """,
                             unsafe_allow_html=True
                         )
+                        
+###フラグ立てて初回のシート記入時のみ　何章日付を記録する。
