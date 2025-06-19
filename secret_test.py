@@ -92,7 +92,14 @@ if not st.session_state.logged_in:
 # --- ログイン後のUI ---
 if st.session_state.logged_in:
     st.markdown("<h1 style='text-align: center;'>🗾 NihonGO❕</h1>", unsafe_allow_html=True)
+        # セレクトボックスの初期化条件
+    if "reset_selectbox" not in st.session_state:
+        st.session_state["reset_selectbox"] = True  # 初回はリセット
 
+    if st.session_state["reset_selectbox"]:
+        index = 0  # 一番上を選ぶ
+    else:
+        index = list(agent_prompts.keys()).index(st.session_state.get("style_label", "シチュエーション選択"))
     with st.sidebar:
         st.title("OPTION")
 
@@ -109,15 +116,6 @@ if st.session_state.logged_in:
             "Chapter 9: 電車の遅延対応": "あなたはAIです。",
             "Chapter EX: English mode": "私は英語の練習がしたいです。簡単な単語を意識して私と英語で会話してください",
         }
-
-        # セレクトボックスの初期化条件
-        if "reset_selectbox" not in st.session_state:
-            st.session_state["reset_selectbox"] = True  # 初回はリセット
-
-        if st.session_state["reset_selectbox"]:
-            index = 0  # 一番上を選ぶ
-        else:
-            index = list(agent_prompts.keys()).index(st.session_state.get("style_label", "シチュエーション選択"))
 
         style_label = st.selectbox(
             "シチュエーション選択",
