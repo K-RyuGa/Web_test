@@ -147,7 +147,7 @@ if st.session_state.logged_in:
                 st.rerun()
                 
         else:
-            if not st.session_state["home"]
+            if not st.session_state["home"]:
                 if st.button("🔙 Chatに戻る"):
             
                     st.session_state["show_history"] = False
