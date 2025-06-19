@@ -61,6 +61,8 @@ st.session_state.setdefault("show_history", False)
 st.session_state.setdefault("clear_screen",False)
 st.session_state.setdefault("home",True)
 st.session_state.setdefault("chat",False)
+st.session_state.setdefault("first_session",True)
+
 
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
@@ -168,8 +170,6 @@ if st.session_state.logged_in:
 
     if st.session_state["home"]:
         
-        flag = 0
-        
         st.title("ホーム画面")
     
         st.subheader("🎮 日本語学習シミュレーションゲームへようこそ！")
@@ -218,8 +218,6 @@ if st.session_state.logged_in:
             
     if st.session_state["clear_screen"]:
         
-        flag = 0
-        
         st.success("目標達成！おめでとうございます！")
 
         # 会話履歴から要約用メッセージを作成
@@ -253,12 +251,9 @@ if st.session_state.logged_in:
             st.session_state["home"] = False
             st.session_state["logged_in"] = True
             st.session_state["chat"] = True
-            flag = 0
             
             st.rerun()
     
-    
- 
        #st.markdown("### 💬 ")
 
     # --- セッション中の履歴表示 ---
@@ -346,12 +341,9 @@ if st.session_state.logged_in:
                 st.session_state.chat_history.append(f"AI: {reply}")
 
                 # Google Sheetsに記録（関数が定義されている前提）
-                if flag == 0:
-                    now = time.strftime('%Y/%m/%d %H:%M')
-                    full_message = style_label + now + "\n" + f"ユーザー: {user_input}\nAI: {reply}"
-                    flag = 1
-                else:
-                    full_message = f"ユーザー: {user_input}\nAI: {reply}"
+                now = time.strftime('%Y/%m/%d %H:%M')
+                full_message = style_label + now + "\n" + f"ユーザー: {user_input}\nAI: {reply}"
+                full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 
                 record_message(st.session_state.username, full_message,"message")
                 if "目標達成" in reply and not st.session_state["home"]:
