@@ -115,7 +115,7 @@ if st.session_state.logged_in:
             st.session_state["style_label"] = "シチュエーション選択" 
             st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
         else:
-            st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
+            st.session_state["style_label"] = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
         st.session_state["agent_prompt"] = agent_prompts[st.session_state["style_label"]]
         st.markdown("---")
 
