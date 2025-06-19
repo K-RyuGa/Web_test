@@ -134,7 +134,8 @@ if st.session_state.logged_in:
         if  not style_label == "シチュエーション選択" and not st.session_state["show_history"]:
             if st.button("🔙 Homeに戻る"):
                 # 状態の初期化（selectboxのリセット含む）
-                del st.session_state["style_label"]
+                if "style_label" in st.session_state:
+                    del st.session_state["style_label"]     
                 st.session_state["show_history"] = False
                 st.session_state["home"] = True
                 st.session_state["logged_in"] = True
