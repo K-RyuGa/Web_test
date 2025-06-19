@@ -112,9 +112,9 @@ if st.session_state.logged_in:
 
         # セレクトボックスの初期化条件
         if "reset_selectbox" not in st.session_state:
-            st.session_state.reset_selectbox = True  # 初回はリセット
+            st.session_state["reset_selectbox"] = True  # 初回はリセット
 
-        if st.session_state.reset_selectbox:
+        if st.session_state["reset_selectbox"]:
             index = 0  # 一番上を選ぶ
         else:
             index = list(agent_prompts.keys()).index(st.session_state.get("style_label", "シチュエーション選択"))
