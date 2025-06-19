@@ -131,7 +131,7 @@ if st.session_state.logged_in:
                 st.session_state["chat"] = False
                 
                 st.rerun()
-        else:
+        if  st.session_state["style_label"] == "シチュエーション選択":
             if st.button("🔙 Homeに戻る"):
                 
                 st.session_state["show_history"] = False
@@ -142,16 +142,15 @@ if st.session_state.logged_in:
                 st.session_state["chat"] = False
                 st.rerun()
                 
-        if st.session_state["chat"]:
-            if st.button("🔙 Homeに戻る"):
-                
+        else: 
+            if st.button("🔙 Chatに戻る"):
+        
                 st.session_state["show_history"] = False
                 st.session_state["home"] = True
                 st.session_state["logged_in"] = True
                 st.session_state["chat_history"] = []
                 st.session_state["clear_screen"] = False
                 st.session_state["chat"] = False
-                st.session_state["style_label"] = "シチュエーション選択"
                 st.rerun()
 
         # ログアウト
