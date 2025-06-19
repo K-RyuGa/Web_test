@@ -162,6 +162,7 @@ if st.session_state.logged_in:
             st.session_state["username"] = False
             st.session_state["clear_screen"] = False
             st.session_state["chat"] = False
+            st.session_state["first_session"] = True
             st.session_state.logged_in = False
             st.session_state.username = ""
             st.session_state.chat_history = []
@@ -240,7 +241,10 @@ if st.session_state.logged_in:
         summary_result = summary_response.choices[0].message.content
         st.markdown("### 会話の評価")
         st.markdown(summary_result)
-        record_message(st.session_state.username, summary_result,"eval")
+        now = time.strftime('%Y/%m/%d %H:%M\n')
+        record_message(st.session_state.username,now + summary_result,"eval")
+
+      
 
         # 「もう一度やる」ボタン
         if st.button("🔁 最初からやり直す"):
@@ -251,7 +255,7 @@ if st.session_state.logged_in:
             st.session_state["home"] = False
             st.session_state["logged_in"] = True
             st.session_state["chat"] = True
-            
+            st.session_state["first_session"] = True
             st.rerun()
     
        #st.markdown("### 💬 ")
@@ -341,15 +345,19 @@ if st.session_state.logged_in:
                 st.session_state.chat_history.append(f"AI: {reply}")
 
                 # Google Sheetsに記録（関数が定義されている前提）
-                now = time.strftime('%Y/%m/%d %H:%M')
-                full_message = style_label + now + "\n" + f"ユーザー: {user_input}\nAI: {reply}"
-                full_message = f"ユーザー: {user_input}\nAI: {reply}"
+                if st.session_state["first_session"]:
+                    now = time.strftime('%Y/%m/%d %H:%M')
+                    full_message = style_label + now + "\n" + f"ユーザー: {user_input}\nAI: {reply}"
+                    st.session_state["first_session"] = False
+                else:
+                    full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 
                 record_message(st.session_state.username, full_message,"message")
                 if "目標達成" in reply and not st.session_state["home"]:
                     st.session_state["clear_screen"] = True
                     st.session_state["chat"] = False
                     st.session_state["chat_histry"] = []
+                    st.session_state["first_session"] = True
                     st.rerun()
                 st.rerun()
             else:
