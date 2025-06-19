@@ -147,15 +147,16 @@ if st.session_state.logged_in:
                 st.rerun()
                 
         else:
-            if st.button("🔙 Chatに戻る"):
-        
-                st.session_state["show_history"] = False
-                st.session_state["home"] = True
-                st.session_state["logged_in"] = True
-                st.session_state["chat_history"] = []
-                st.session_state["clear_screen"] = False
-                st.session_state["chat"] = False
-                st.rerun()
+            if not st.session_state["home"]
+                if st.button("🔙 Chatに戻る"):
+            
+                    st.session_state["show_history"] = False
+                    st.session_state["home"] = True
+                    st.session_state["logged_in"] = True
+                    st.session_state["chat_history"] = []
+                    st.session_state["clear_screen"] = False
+                    st.session_state["chat"] = False
+                    st.rerun()
 
         # ログアウト
         if st.button("🚪 ログアウト"):
