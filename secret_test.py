@@ -62,7 +62,7 @@ st.session_state.setdefault("clear_screen",False)
 st.session_state.setdefault("home",True)
 st.session_state.setdefault("chat",False)
 st.session_state.setdefault("first_session",True)
-
+st.session_state.setdefault("style_label",False)
 
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
@@ -110,10 +110,11 @@ if st.session_state.logged_in:
             "Chapter 9: 電車の遅延対応": "あなたはAIです。",
             "Chapter EX: English mode": "私は英語の練習がしたいです。簡単な単語を意識して私と英語で会話してください",
         }
-        if not style_label:
-            style_label = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
+        
+        if not st.session_state["style_label"]:
+            st.session_state["style_label"] = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
 
-        st.session_state["agent_prompt"] = agent_prompts[style_label]
+        st.session_state["agent_prompt"] = agent_prompts[st.session_state["style_label"]]
         st.markdown("---")
 
         # show_historyが未定義ならFalseで初期化
@@ -132,7 +133,7 @@ if st.session_state.logged_in:
                 st.session_state["chat"] = False
                 
                 st.rerun()
-        if  not style_label == "シチュエーション選択" and not st.session_state["show_history"]:
+        if  not st.session_state["style_label"] == "シチュエーション選択" and not st.session_state["show_history"]:
             if st.button("🔙 Homeに戻る"):
                 st.session_state["show_history"] = False
                 st.session_state["home"] = True
@@ -191,7 +192,7 @@ if st.session_state.logged_in:
         st.markdown("### 💬 質問がある場合")
         st.write("画面下のチャット欄に質問を入力してください。できる限り丁寧にお答えします。")
         
-        if style_label != "シチュエーション選択":
+        if st.session_state["style_label"] != "シチュエーション選択":
             st.session_state["home"] = False
             st.session_state["chat"] = True
             st.rerun()
@@ -212,7 +213,7 @@ if st.session_state.logged_in:
     }
     if not st.session_state["home"] and not st.session_state["show_history"]:
         
-        selected_chapter = style_label  # すでに selectbox で選ばれている
+        selected_chapter = st.session_state["style_label"] # すでに selectbox で選ばれている
         description = chapter_descriptions.get(selected_chapter, "")
         if description:
             st.info(description)
@@ -347,7 +348,7 @@ if st.session_state.logged_in:
                 # Google Sheetsに記録（関数が定義されている前提）
                 if st.session_state["first_session"]:
                     now = time.strftime('%Y/%m/%d %H:%M')
-                    full_message = style_label + now + "\n" + f"ユーザー: {user_input}\nAI: {reply}"
+                    full_message = st.session_state["style_label"] + now + "\n" + f"ユーザー: {user_input}\nAI: {reply}"
                     st.session_state["first_session"] = False
                 else:
                     full_message = f"ユーザー: {user_input}\nAI: {reply}"
