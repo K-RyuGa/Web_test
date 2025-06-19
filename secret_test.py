@@ -133,14 +133,17 @@ if st.session_state.logged_in:
                 st.rerun()
         if  not style_label == "シチュエーション選択" and not st.session_state["show_history"]:
             if st.button("🔙 Homeに戻る"):
-                
+                # 状態の初期化（selectboxのリセット含む）
+                for key in ["show_history", "home", "logged_in", "chat_history", "clear_screen", "chat", "style_label"]:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.rerun()
                 st.session_state["show_history"] = False
                 st.session_state["home"] = True
                 st.session_state["logged_in"] = True
                 st.session_state["chat_history"] = []
                 st.session_state["clear_screen"] = False
                 st.session_state["chat"] = False
-                del st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
                 st.rerun()
                 
         else:
