@@ -193,8 +193,8 @@ if st.session_state.logged_in:
         """)
      
         st.info("まずは左のサイドバーから、練習したいシチュエーションを選んでみましょう！")
-        st.markdown("### 💬 質問がある場合")
-        st.write("画面下のチャット欄に質問を入力してください。できる限り丁寧にお答えします。")
+        # st.markdown("### 💬 質問がある場合")
+        # st.write("画面下のチャット欄に質問を入力してください。できる限り丁寧にお答えします。")
         
         if st.session_state["style_label"] != "シチュエーション選択":
             st.session_state["home"] = False
@@ -312,7 +312,7 @@ if st.session_state.logged_in:
 
 
     # --- 入力フォーム ---
-    if st.session_state["chat"] or st.session_state["home"]:
+    if st.session_state["chat"] :#or st.session_state["home"]:
         with st.form(key="chat_form", clear_on_submit=True):
             col1, col2 = st.columns([5, 1])
             with col1:
