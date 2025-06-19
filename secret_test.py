@@ -92,19 +92,13 @@ if not st.session_state.logged_in:
 # --- ログイン後のUI ---
 if st.session_state.logged_in:
     st.markdown("<h1 style='text-align: center;'>🗾 NihonGO❕</h1>", unsafe_allow_html=True)
-        # セレクトボックスの初期化条件
-    if "reset_selectbox" not in st.session_state:
-        st.session_state["reset_selectbox"] = True  # 初回はリセット
 
-    if st.session_state["reset_selectbox"]:
-        index = 0  # 一番上を選ぶ
-    else:
-        index = list(agent_prompts.keys()).index(st.session_state.get("style_label", "シチュエーション選択"))
     with st.sidebar:
         st.title("OPTION")
 
+        # 会話スタイル選択
         agent_prompts = {
-            "シチュエーション選択": "あなたはゲームのアシスタントです。",
+            "シチュエーション選択":"あなたはゲームのアシスタントです。",
             "Chapter 1: 空港での手続き": "あなたはAIです。",
             "Chapter 2: スーパーでの買い物": "あなたはAIです。",
             "Chapter 3: 友人との会話": "あなたはAIです。",
@@ -116,13 +110,7 @@ if st.session_state.logged_in:
             "Chapter 9: 電車の遅延対応": "あなたはAIです。",
             "Chapter EX: English mode": "私は英語の練習がしたいです。簡単な単語を意識して私と英語で会話してください",
         }
-
-        style_label = st.selectbox(
-            "シチュエーション選択",
-            list(agent_prompts.keys()),
-            index=index,
-            key="style_label"  # 明示的に状態保持のキーを設定
-        )
+        style_label = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
 
         st.session_state["agent_prompt"] = agent_prompts[style_label]
         st.markdown("---")
@@ -145,15 +133,12 @@ if st.session_state.logged_in:
                 st.rerun()
         if  not style_label == "シチュエーション選択" and not st.session_state["show_history"]:
             if st.button("🔙 Homeに戻る"):
-                # 状態の初期化（selectboxのリセット含む）
-                del style_label  
                 st.session_state["show_history"] = False
                 st.session_state["home"] = True
                 st.session_state["logged_in"] = True
                 st.session_state["chat_history"] = []
                 st.session_state["clear_screen"] = False
                 st.session_state["chat"] = False
-                st.session_state["reset_selectbox"] = True
                 st.rerun()
                 
         else:
