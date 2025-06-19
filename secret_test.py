@@ -151,6 +151,7 @@ if st.session_state.logged_in:
                 st.session_state["chat_history"] = []
                 st.session_state["clear_screen"] = False
                 st.session_state["chat"] = False
+                st.session_state["style_label"] = "シチュエーション選択"
                 st.rerun()
 
         # ログアウト
@@ -166,7 +167,7 @@ if st.session_state.logged_in:
             st.session_state.logged_in = False
             st.session_state.username = ""
             st.session_state.chat_history = []
-            
+            st.session_state["style_label"] = "シチュエーション選択"
             st.rerun()
 
     if st.session_state["home"]:
@@ -419,4 +420,5 @@ if st.session_state.logged_in:
                             unsafe_allow_html=True
                         )
                         
-###フラグ立てて初回のシート記入時のみ　何章日付を記録する。
+###homeに戻るボタンでは、labelをシチュエーション選択にする。
+###もしlabelがhome以外かつ履歴閲覧中ならchatに戻るボタンを追加。
