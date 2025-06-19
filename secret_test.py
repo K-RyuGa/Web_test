@@ -140,7 +140,7 @@ if st.session_state.logged_in:
                 st.session_state["chat_history"] = []
                 st.session_state["clear_screen"] = False
                 st.session_state["chat"] = False
-                del st.session_state["style_label"]
+                del style_label
                 st.rerun()
                 
         else:
