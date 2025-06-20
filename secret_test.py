@@ -478,31 +478,31 @@ if st.session_state.logged_in:
     elif st.session_state["eval"]:
         st.title("🎩過去のフィードバック")
 
-        # メッセージ🎩得（load_messageは既存関数）
-        message = load_message(st.session_state["username"],"eval")
+        # メッセージ取得（load_messageは既存関数）
+        message = load_message(st.session_state["username"], "eval")
 
         if not message:
             st.info("フィードバックはまだ登録されていません。")
         else:
-            # 各フィードバックを「Chapter X: ○○YYYY/MM/DD hh:mm」で抽出
-            pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})(.*?)(?=Chapter \d+: |\Z)"  # 最後まで対応
+            import re
+
+            # 「Chapter X: ○○YYYY/MM/DD hh:mm」ごとにフィードバックを抽出
+            pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})\n(.*?)(?=Chapter \d+: |\Z)"
             matches = re.findall(pattern, message, re.DOTALL)
 
             if not matches:
                 st.warning("フィードバックが解析できませんでした。")
             else:
-                # 辞書に格納 { "Chapter X: ...日時": 内容 }
-                feedback_dict = {
-                    title.strip(): (title.strip() + body.strip())
-                    for title, body in matches
-                }
+                # セレクトボックスの選択肢用にタイトルだけ使用
+                feedback_dict = {title.strip(): body.strip() for title, body in matches}
 
-                # セレクトボックスで表示
+                # セレクトボックスでフィードバック選択
                 selected_title = st.selectbox("表示するフィードバックを選んでください", sorted(feedback_dict.keys(), reverse=True))
-                st.markdown("### フィードバック内容")
-                st.markdown(feedback_dict[selected_title])
 
-            
-                            
-        ###homeに戻るボタンでは、labelをシチュエーション選択にする。
-        ###もしlabelがhome以外かつ履歴閲覧中ならchatに戻るボタンを追加。
+                # 表示（タイトルは非表示）
+                st.markdown("### フィードバック内容")
+                selected_body = feedback_dict[selected_title]
+
+                # パラグラフごとに分けて表示（2重改行で段落分割）
+                for para in selected_body.split("\n\n"):
+                    st.markdown(para.strip())
