@@ -438,7 +438,7 @@ if st.session_state.logged_in:
                                 """,
                             unsafe_allow_html=True
                         )
-   elif st.session_state["eval"]:
+    elif st.session_state["eval"]:
         st.title("フィードバック一覧")
 
         # メッセージを取得（load_messageは既存関数）
