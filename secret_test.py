@@ -151,7 +151,7 @@ if st.session_state.logged_in:
                 
                 st.rerun()
                 
-        if not st.session_state["show_history"]:
+        if not st.session_state["eval"]:
             if st.button("🎩 過去のフィードバック"):      
                 st.session_state["show_history"] = False
                 st.session_state["home"] = False
@@ -163,7 +163,7 @@ if st.session_state.logged_in:
                 
                 st.rerun()
                 
-        if  not st.session_state["style_label"] == "シチュエーション選択" and not st.session_state["show_history"]:
+        if  not st.session_state["style_label"] == "シチュエーション選択" and not st.session_state["show_history"] and not st.session_state["eval"]:
             if st.button("🔙 Homeに戻る"):
                 st.session_state["show_history"] = False
                 st.session_state["home"] = True
