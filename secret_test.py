@@ -476,9 +476,9 @@ if st.session_state.logged_in:
 
 
     elif st.session_state["eval"]:
-        st.title("フィードバック一覧")
+        st.title("🎩過去のフィードバック")
 
-        # メッセージを取得（load_messageは既存関数）
+        # メッセージ🎩得（load_messageは既存関数）
         message = load_message(st.session_state["username"],"eval")
 
         if not message:
