@@ -404,67 +404,69 @@ if st.session_state.logged_in:
         if not history.strip():
             st.info("（会話履歴はまだありません）")
         else:
-            # --- Chapterごとの会話ブロックを抽出 ---
-            # 例: Chapter 1: 空港での手続き2025/06/20 00:35 から始まり次の Chapter までが1ブロック
+            # 「Chapter + 日付」ごとのブロックを抽出
             pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})(.*?)(?=Chapter \d+: |\Z)"
             matches = re.findall(pattern, history, re.DOTALL)
 
             if not matches:
                 st.warning("履歴の解析に失敗しました。")
             else:
-                # セレクトボックスの選択肢を作成
+                # タイトルだけをリスト化（選択肢）
                 options = [title.strip() for title, _ in matches]
                 selected = st.selectbox("表示する会話を選んでください", options[::-1])  # 新しい順
 
-                # 選択された会話を表示
-                for title, content in matches:
-                    if title.strip() == selected:
-                        st.markdown(f"#### {title.strip()}")
-                        lines = content.strip().split("\n")
-                        for line in lines:
-                            line = line.strip()
-                            if line.startswith("ユーザー:"):
-                                col1, col2 = st.columns([4, 6])
-                                with col2:
-                                    st.markdown(
-                                        f"""
-                                        <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
-                                            <div style='
-                                                background-color: #DCF8C6;
-                                                padding: 8px 12px;
-                                                border-radius: 8px;
-                                                max-width: 80%;
-                                                word-wrap: break-word;
-                                                text-align: left;
-                                                font-size: 16px;
-                                            '>
-                                                {line.replace("ユーザー:", "")}
-                                            </div>
+                # 選ばれたタイトルのブロックのみ表示
+                selected_block = next(((t, c) for t, c in matches if t.strip() == selected), None)
+
+                if selected_block:
+                    title, content = selected_block
+                    st.markdown(f"#### {title.strip()}")
+
+                    lines = content.strip().split("\n")
+                    for line in lines:
+                        line = line.strip()
+                        if line.startswith("ユーザー:"):
+                            col1, col2 = st.columns([4, 6])
+                            with col2:
+                                st.markdown(
+                                    f"""
+                                    <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
+                                        <div style='
+                                            background-color: #DCF8C6;
+                                            padding: 8px 12px;
+                                            border-radius: 8px;
+                                            max-width: 80%;
+                                            word-wrap: break-word;
+                                            text-align: left;
+                                            font-size: 16px;
+                                        '>
+                                            {line.replace("ユーザー:", "")}
                                         </div>
-                                        """,
-                                        unsafe_allow_html=True
-                                    )
-                            elif line.startswith("AI:"):
-                                col1, col2 = st.columns([6, 4])
-                                with col1:
-                                    st.markdown(
-                                        f"""
-                                        <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
-                                            <div style='
-                                                background-color: #E6E6EA;
-                                                padding: 8px 12px;
-                                                border-radius: 8px;
-                                                max-width: 80%;
-                                                word-wrap: break-word;
-                                                text-align: left;
-                                                font-size: 16px;
-                                            '>
-                                                {line.replace("AI:", "")}
-                                            </div>
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+                        elif line.startswith("AI:"):
+                            col1, col2 = st.columns([6, 4])
+                            with col1:
+                                st.markdown(
+                                    f"""
+                                    <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
+                                        <div style='
+                                            background-color: #E6E6EA;
+                                            padding: 8px 12px;
+                                            border-radius: 8px;
+                                            max-width: 80%;
+                                            word-wrap: break-word;
+                                            text-align: left;
+                                            font-size: 16px;
+                                        '>
+                                            {line.replace("AI:", "")}
                                         </div>
-                                        """,
-                                        unsafe_allow_html=True
-                                    )
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True
+                                )
 
 
     elif st.session_state["eval"]:
