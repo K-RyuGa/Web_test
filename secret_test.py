@@ -129,15 +129,6 @@ if st.session_state.logged_in:
             st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
         else:
             st.session_state["style_label"] = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
-            if st.session_state["style_label"] == "シチュエーション選択":
-                st.session_state["show_history"] = False
-                st.session_state["home"] = True
-                st.session_state["logged_in"] = True
-                st.session_state["chat_history"] = []
-                st.session_state["clear_screen"] = False
-                st.session_state["chat"] = False
-                st.session_state["eval"] = False
-                st.rerun()
                 
         st.session_state["agent_prompt"] = agent_prompts[st.session_state["style_label"]]
         st.markdown("---")
