@@ -47,11 +47,11 @@ def record_message(username, new_message,where):
             break
 
 # --- メッセージ履歴を取得 ---
-def load_message(username):
+def load_message(username,item):
     all_users = sheet.get_all_records()
     for user in all_users:
         if user["username"] == username:
-            return user.get("message", "")
+            return user.get(item, "")
     return ""
 
 # --- セッション管理初期化 ---
@@ -139,7 +139,7 @@ if st.session_state.logged_in:
                 st.rerun()
                 
         if not st.session_state["show_history"]:
-            if st.button("🎩 過去のフィードバックを確認"):      
+            if st.button("🎩 過去のフィードバック"):      
                 st.session_state["show_history"] = False
                 st.session_state["home"] = False
                 st.session_state["logged_in"] = True
@@ -388,7 +388,7 @@ if st.session_state.logged_in:
     elif st.session_state.show_history:
         # --- 履歴画面 ---
         st.markdown("### 📜 会話履歴")
-        history = load_message(st.session_state.username)
+        history = load_message(st.session_state.username,"message")
 
         if not history.strip():
             st.info("（会話履歴はまだありません）")
@@ -442,7 +442,7 @@ if st.session_state.logged_in:
         st.title("フィードバック一覧")
 
         # メッセージを取得（load_messageは既存関数）
-        message = load_message(st.session_state["username"])
+        message = load_message(st.session_state["username"],"eval")
 
         if not message:
             st.info("フィードバックはまだ登録されていません。")
