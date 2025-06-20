@@ -146,6 +146,8 @@ if st.session_state.logged_in:
                 st.session_state["chat_history"] = []
                 st.session_state["clear_screen"] = False
                 st.session_state["chat"] = False
+                st.session_state["eval"] = False
+
                 
                 st.rerun()
                 
@@ -170,6 +172,7 @@ if st.session_state.logged_in:
                 st.session_state["clear_screen"] = False
                 st.session_state["chat"] = False
                 st.session_state["style_label"] = False
+                st.session_state["eval"] = False
                 st.rerun()
                 
         else:
@@ -182,6 +185,7 @@ if st.session_state.logged_in:
                     st.session_state["chat_history"] = []
                     st.session_state["clear_screen"] = False
                     st.session_state["chat"] = False
+                    st.session_state["eval"] = False
                     st.rerun()
 
         # ログアウト
@@ -190,12 +194,12 @@ if st.session_state.logged_in:
             st.session_state["show_history"] = False
             st.session_state["home"] = True
             st.session_state["logged_in"] = False
-            st.session_state["username"] = False
             st.session_state["clear_screen"] = False
             st.session_state["chat"] = False
             st.session_state["first_session"] = True
-            st.session_state.logged_in = False
+            st.session_state["eval"] = False
             st.session_state.username = ""
+            #st.session_state["username"] = False
             st.session_state.chat_history = []
             st.session_state["style_label"] = "シチュエーション選択"
             st.rerun()
@@ -287,6 +291,7 @@ if st.session_state.logged_in:
             st.session_state["logged_in"] = True
             st.session_state["chat"] = True
             st.session_state["first_session"] = True
+            st.session_state["username"] = False
             st.rerun()
     
        #st.markdown("### 💬 ")
