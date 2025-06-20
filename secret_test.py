@@ -399,67 +399,73 @@ if st.session_state.logged_in:
     elif st.session_state.show_history:
         st.markdown("### 📜 会話履歴")
 
-        # 履歴データを取得（usernameは仮に"message"列を指定）
         history = load_message(st.session_state.username, "message")
 
         if not history.strip():
             st.info("（会話履歴はまだありません）")
         else:
-            pattern = r"(\d{4}/\d{2}/\d{2} \d{2}:\d{2})(.*?)(?=\d{4}/\d{2}/\d{2} \d{2}:\d{2}|\Z)"
-            sessions = re.findall(pattern, history, re.DOTALL)
+            # --- Chapterごとの会話ブロックを抽出 ---
+            # 例: Chapter 1: 空港での手続き2025/06/20 00:35 から始まり次の Chapter までが1ブロック
+            pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})(.*?)(?=Chapter \d+: |\Z)"
+            matches = re.findall(pattern, history, re.DOTALL)
 
-            # セレクトボックスのオプション（逆順で新しい順に）
-            options = [s[0] for s in sessions][::-1]
-            selected_time = st.selectbox("表示したい会話の日付を選んでください", options)
+            if not matches:
+                st.warning("履歴の解析に失敗しました。")
+            else:
+                # セレクトボックスの選択肢を作成
+                options = [title.strip() for title, _ in matches]
+                selected = st.selectbox("表示する会話を選んでください", options[::-1])  # 新しい順
 
-            # 選択された会話のメッセージを表示
-            for timestamp, text in sessions:
-                if timestamp == selected_time:
-                    messages = [m for m in text.strip().split("\n") if m.strip()]
-                    for msg in messages:
-                        if msg.startswith("ユーザー:"):
-                            col1, col2 = st.columns([4, 6])
-                            with col2:
-                                st.markdown(
-                                    f"""
-                                    <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
-                                        <div style='
-                                            background-color: #DCF8C6;
-                                            padding: 8px 12px;
-                                            border-radius: 8px;
-                                            max-width: 80%;
-                                            word-wrap: break-word;
-                                            text-align: left;
-                                            font-size: 16px;
-                                        '>
-                                            {msg.replace("ユーザー:", "")}
+                # 選択された会話を表示
+                for title, content in matches:
+                    if title.strip() == selected:
+                        st.markdown(f"#### {title.strip()}")
+                        lines = content.strip().split("\n")
+                        for line in lines:
+                            line = line.strip()
+                            if line.startswith("ユーザー:"):
+                                col1, col2 = st.columns([4, 6])
+                                with col2:
+                                    st.markdown(
+                                        f"""
+                                        <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
+                                            <div style='
+                                                background-color: #DCF8C6;
+                                                padding: 8px 12px;
+                                                border-radius: 8px;
+                                                max-width: 80%;
+                                                word-wrap: break-word;
+                                                text-align: left;
+                                                font-size: 16px;
+                                            '>
+                                                {line.replace("ユーザー:", "")}
+                                            </div>
                                         </div>
-                                    </div>
-                                    """,
-                                    unsafe_allow_html=True
-                                )
-
-                        elif msg.startswith("AI:"):
-                            col1, col2 = st.columns([6, 4])
-                            with col1:
-                                st.markdown(
-                                    f"""
-                                    <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
-                                        <div style='
-                                            background-color: #E6E6EA;
-                                            padding: 8px 12px;
-                                            border-radius: 8px;
-                                            max-width: 80%;
-                                            word-wrap: break-word;
-                                            text-align: left;
-                                            font-size: 16px;
-                                        '>
-                                            {msg.replace("AI:", "")}
+                                        """,
+                                        unsafe_allow_html=True
+                                    )
+                            elif line.startswith("AI:"):
+                                col1, col2 = st.columns([6, 4])
+                                with col1:
+                                    st.markdown(
+                                        f"""
+                                        <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
+                                            <div style='
+                                                background-color: #E6E6EA;
+                                                padding: 8px 12px;
+                                                border-radius: 8px;
+                                                max-width: 80%;
+                                                word-wrap: break-word;
+                                                text-align: left;
+                                                font-size: 16px;
+                                            '>
+                                                {line.replace("AI:", "")}
+                                            </div>
                                         </div>
-                                    </div>
-                                    """,
-                                    unsafe_allow_html=True
-                                )
+                                        """,
+                                        unsafe_allow_html=True
+                                    )
+
 
     elif st.session_state["eval"]:
         st.title("フィードバック一覧")
