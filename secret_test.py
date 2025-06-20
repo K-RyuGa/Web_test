@@ -256,14 +256,10 @@ if st.session_state.logged_in:
     if st.session_state["clear_screen"]:
         
         st.success("目標達成！おめでとうございます！")
-
-        # 会話履歴から要約用メッセージを作成
+        
         summary_input = "\n".join(st.session_state.chat_history)
-
-        # 要約用エージェントプロンプト
         summary_prompt = "以下は日本語学習者とAIとの会話です。この会話を日本語教育の観点から評価して"
-
-        # 要約実行
+        
         client = OpenAI(api_key=st.secrets["openai"]["api_key"])
         summary_response = client.chat.completions.create(
             model="gpt-4o",
@@ -292,7 +288,6 @@ if st.session_state.logged_in:
             st.session_state["logged_in"] = True
             st.session_state["chat"] = True
             st.session_state["first_session"] = True
-            st.session_state["username"] = False
             st.rerun()
     
        #st.markdown("### 💬 ")
@@ -390,6 +385,7 @@ if st.session_state.logged_in:
                     full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 
                 record_message(st.session_state.username, full_message,"message")
+                
                 if "目標達成" in reply and not st.session_state["home"]:
                     st.session_state["clear_screen"] = True
                     st.session_state["chat"] = False
