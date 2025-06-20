@@ -261,7 +261,7 @@ if st.session_state.logged_in:
         st.markdown("### 会話の評価")
         st.markdown(summary_result)
         now = time.strftime('%Y/%m/%d %H:%M\n')
-        record_message(st.session_state.username,st.session_state["style_label"] + now + "\n"summary_result,"eval")
+        record_message(st.session_state.username, st.session_state["style_label"] + now  + summary_result,"eval")
 
       
 
