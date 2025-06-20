@@ -3,6 +3,7 @@ from openai import OpenAI
 import gspread
 from google.oauth2.service_account import Credentials
 import time
+import re
 
 # --- Google Sheets 認証 ---
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -437,8 +438,34 @@ if st.session_state.logged_in:
                                 """,
                             unsafe_allow_html=True
                         )
-   # elif st.session_state["eval"]:
-        
-                        
-###homeに戻るボタンでは、labelをシチュエーション選択にする。
-###もしlabelがhome以外かつ履歴閲覧中ならchatに戻るボタンを追加。
+   elif st.session_state["eval"]:
+        st.title("フィードバック一覧")
+
+        # メッセージを取得（load_messageは既存関数）
+        message = load_message(st.session_state["username"])
+
+        if not message:
+            st.info("フィードバックはまだ登録されていません。")
+        else:
+            # 各フィードバックを「Chapter X: ○○YYYY/MM/DD hh:mm」で抽出
+            pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})(.*?)(?=Chapter \d+: |\Z)"  # 最後まで対応
+            matches = re.findall(pattern, message, re.DOTALL)
+
+            if not matches:
+                st.warning("フィードバックが解析できませんでした。")
+            else:
+                # 辞書に格納 { "Chapter X: ...日時": 内容 }
+                feedback_dict = {
+                    title.strip(): (title.strip() + body.strip())
+                    for title, body in matches
+                }
+
+                # セレクトボックスで表示
+                selected_title = st.selectbox("表示するフィードバックを選んでください", sorted(feedback_dict.keys(), reverse=True))
+                st.markdown("### フィードバック内容")
+                st.markdown(feedback_dict[selected_title])
+
+            
+                            
+        ###homeに戻るボタンでは、labelをシチュエーション選択にする。
+        ###もしlabelがhome以外かつ履歴閲覧中ならchatに戻るボタンを追加。
