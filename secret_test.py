@@ -63,6 +63,7 @@ st.session_state.setdefault("home",True)
 st.session_state.setdefault("chat",False)
 st.session_state.setdefault("first_session",True)
 st.session_state.setdefault("style_label",False)
+st.session_state.setdefault("eval",False)
 
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
@@ -135,6 +136,19 @@ if st.session_state.logged_in:
                 st.session_state["chat"] = False
                 
                 st.rerun()
+                
+        if not st.session_state["show_history"]:
+            if st.button("🎩 過去のフィードバックを確認"):      
+                st.session_state["show_history"] = False
+                st.session_state["home"] = False
+                st.session_state["logged_in"] = True
+                st.session_state["chat_history"] = []
+                st.session_state["clear_screen"] = False
+                st.session_state["chat"] = False
+                st.session_state["eval"] = True
+                
+                st.rerun()
+                
         if  not st.session_state["style_label"] == "シチュエーション選択" and not st.session_state["show_history"]:
             if st.button("🔙 Homeに戻る"):
                 st.session_state["show_history"] = False
@@ -247,7 +261,7 @@ if st.session_state.logged_in:
         st.markdown("### 会話の評価")
         st.markdown(summary_result)
         now = time.strftime('%Y/%m/%d %H:%M\n')
-        record_message(st.session_state.username,now + summary_result,"eval")
+        record_message(st.session_state.username,st.session_state["style_label"] + now + "\n"summary_result,"eval")
 
       
 
@@ -423,6 +437,8 @@ if st.session_state.logged_in:
                                 """,
                             unsafe_allow_html=True
                         )
+    elif st.session_state["eval"]:
+        
                         
 ###homeに戻るボタンでは、labelをシチュエーション選択にする。
 ###もしlabelがhome以外かつ履歴閲覧中ならchatに戻るボタンを追加。
