@@ -437,7 +437,7 @@ if st.session_state.logged_in:
                                 """,
                             unsafe_allow_html=True
                         )
-    elif st.session_state["eval"]:
+   # elif st.session_state["eval"]:
         
                         
 ###homeに戻るボタンでは、labelをシチュエーション選択にする。
