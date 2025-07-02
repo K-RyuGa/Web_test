@@ -460,24 +460,35 @@ if st.session_state.logged_in:
         
         st.success("目標達成！おめでとうございます！")
         
-        summary_input = "\n".join(st.session_state.chat_history)
-        summary_prompt = "以下は日本語学習者とAIとの会話です。この会話を日本語教育の観点から評価して"
+        # --- Game.pyから移植した詳細な評価プロンプト ---
+        evaluation_prompt = '''
+            あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部を担当してもらいます。
+            このゲームは、日本語学習中の外国人プレイヤーが、架空の日本での生活をシミュレーションしながらリアルな会話を通じて日本語力を向上させることを目的としています。
+            プレイヤーは、さまざまなシチュエーションで登場するキャラクターと会話を重ね、日本での生活を疑似体験しながら、語彙や文法、そして自然な表現を学んでいきます。
+            あなたにはこのゲームにおいて会話を評価しプレイヤーにフィードバックをする役割を担当してもらいます。以下の文章はこのゲームでの会話履歴です。
+            「文法の誤り」、「単語の誤り」「TPO」の3つの観点から評価してください。最初に点数を100点満点で「n/100」のように出力し、その後、具体的な誤りについて説明してください。
+            ただし、点数は厳しくつけてください。出力はプレイヤーに語り掛ける口調にしてください。
+        '''
+        
+        conversation_log = "\n".join(st.session_state.chat_history)
         
         client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-        summary_response = client.chat.completions.create(
+        evaluation_response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": summary_prompt},
-                {"role": "user", "content": summary_input}
+                {"role": "system", "content": evaluation_prompt},
+                {"role": "user", "content": conversation_log}
             ],
-            temperature=0.5,
+            temperature=0.5, # 評価なので安定した出力を求める
         )
 
-        summary_result = summary_response.choices[0].message.content
+        evaluation_result = evaluation_response.choices[0].message.content
         st.markdown("### 会話の評価")
-        st.markdown(summary_result)
-        now = time.strftime('%Y/%m/%d %H:%M\n')
-        record_message(st.session_state.username, st.session_state["style_label"] + now  + summary_result,"eval")
+        st.markdown(evaluation_result)
+        
+        # 日本時間で評価を記録
+        now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\\n')
+        record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
 
       
 
