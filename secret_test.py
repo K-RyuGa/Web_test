@@ -407,32 +407,23 @@ if st.session_state.logged_in:
         
     # --- 説明文定義 ---
     chapter_descriptions = {
-        "シナリオ選択":"",
-        "Chapter 1": "空港での手続き\n日本に到着し、いよいよ入国手続きへ。空港スタッフの案内を受け、パスポートを提示し、入国審査を進めてください。荷物の受け取り場所も確認し、スムーズに空港を出るための準備をしましょう。",
-        
-        "Chapter 2": "スーパーでの買い物\n生活に必要なものを揃えるため、近所のスーパーで買い物をします。店員とのやり取りを通じて、レジでの会計を体験し、支払い方法を選んでスムーズに買い物を完了しましょう。",
-        
-        "Chapter 3": "友人との会話\n新しい友人と初めての会話を楽しみます。お互いの自己紹介から始め、趣味や今後の予定について話し合いながら、友人関係を深めていきましょう。",
-        
-        "Chapter 4": "職場の自己紹介\n新しい職場での初日。自己紹介を通じて同僚との関係を築き、職場の雰囲気に慣れましょう。緊張感を和らげつつ、上手に自己紹介をしていくことが目標です。",
-        
-        "Chapter 5": "病院での診察\n体調不良の際に病院を訪れ、医師との診察を受けます。症状をしっかり伝え、診察を受けることで適切な治療を受けられるよう、自然な会話を意識しましょう。",
-        
-        "Chapter 6": "会議での発言\n職場の会議に参加し、自分の意見を述べる場面です。議論に参加しながら、適切なフィードバックを受け、職場での存在感を高めることを目指します。",
-        
-        "Chapter 7": "お祭りに参加\n日本のお祭りに参加し、友人と一緒に日本の伝統文化を体験します。イベントのマナーや背景を理解しながら、楽しい時間を過ごしましょう。",
-        
-        "Chapter 8": "市役所での手続き\n日本での生活には、さまざまな手続きが必要です。市役所を訪れ、必要な書類を提出して手続きを進め、円滑に生活の基盤を整えていきましょう。",
-        
-        "Chapter 9": "電車の遅延対応\n通勤や外出中に電車が遅延してしまった場合の対応を学びます。駅員とのやり取りを通じて、次の行動を考え、無事に目的地に到着できるように対処しましょう。"
+        "Chapter 1: 空港での手続き": "この章では、日本の空港での入国手続きや質問への受け答えを練習します。",
+        "Chapter 2: スーパーでの買い物": "この章では、スーパーでの買い物や店員とのやりとりを学びます。",
+        "Chapter 3: 友人との会話": "この章では、友人との日常的な会話を練習します。",
+        "Chapter 4: 職場の自己紹介": "この章では、職場での自己紹介や会話を学びます。",
+        "Chapter 5: 病院での診察": "この章では、病院での症状説明や診察の会話を練習します。",
+        "Chapter 6: 会議での発言": "この章では、会議での発言や意見の伝え方を学びます。",
+        "Chapter 7: お祭りに参加": "この章では、日本のお祭りでの体験や会話を練習します。",
+        "Chapter 8: 市役所での手続き": "この章では、市役所での各種手続きに関する会話を学びます。",
+        "Chapter 9: 電車の遅延対応": "この章では、電車の遅延時の対応や駅員との会話を練習します。",
     }
-    
-    if not st.session_state["home"] and not st.session_state["show_history"] and not st.session_state["eval"]:
-        
-        selected_chapter = st.session_state["style_label"] # すでに selectbox で選ばれている
-        description = chapter_descriptions.get(selected_chapter, "")
+
+    if st.session_state.chat:
+        description = chapter_descriptions.get(st.session_state.style_label, "")
         if description:
             st.info(description)
+
+    if not st.session_state["home"] and not st.session_state["show_history"] and not st.session_state["eval"]:
 
         # --- AIが会話を始める処理 ---
         if st.session_state.first_session and st.session_state.chat:
