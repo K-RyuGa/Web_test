@@ -33,7 +33,8 @@ def check_password(username, password):
 def register_user(username, password):
     if user_exists(username):
         return False
-    sheet.append_row([username, password, ""])
+    # 必ず5列分のデータを持つ行を追加する
+    sheet.append_row([username, password, "", "", ""])
     return True
 
 # --- メッセージを追記 ---
@@ -67,16 +68,125 @@ def load_message(username,item):
     return ""
 
 # --- セッション管理初期化 ---
+# --- セッション管理初期化（ページ管理方式に刷新） ---
 st.session_state.setdefault("logged_in", False)
 st.session_state.setdefault("username", "")
+st.session_state.setdefault("page", "home")  # home, chat, clear, history, eval
+st.session_state.setdefault("selected_chapter", "シチュエーション選択")
 st.session_state.setdefault("chat_history", [])
-st.session_state.setdefault("show_history", False)
-st.session_state.setdefault("clear_screen",False)
-st.session_state.setdefault("home",True)
-st.session_state.setdefault("chat",False)
-st.session_state.setdefault("first_session",True)
-st.session_state.setdefault("style_label", "シチュエーション選択") # 初期値を設定
-st.session_state.setdefault("eval",False)
+st.session_state.setdefault("first_chat_message", True)
+
+# --- ログイン前のUI ---
+if not st.session_state.logged_in:
+    st.title("ログイン / 新規登録")
+    mode = st.radio("モードを選択", ["ログイン", "新規登録"])
+    username = st.text_input("ユーザー名")
+    password = st.text_input("パスワード", type="password")
+
+    if st.button("送信"):
+        if mode == "新規登録":
+            if register_user(username, password):
+                st.session_state.logged_in = True
+                st.session_state.username = username
+                st.rerun()
+            else:
+                st.error("そのユーザー名は既に使われているか、登録に失敗しました。")
+        else:
+            if check_password(username, password):
+                st.session_state.logged_in = True
+                st.session_state.username = username
+                st.rerun()
+            else:
+                st.error("ユーザー名またはパスワードが間違っています。")
+
+# --- ログイン後のUI ---
+if st.session_state.logged_in:
+    st.markdown("<h1 style='text-align: center;'>🗾 NihonGO❕</h1>", unsafe_allow_html=True)
+
+    # --- プロンプトとシナリオ定義 ---
+    base_prompt = '''(省略)'''
+    end_prompt = '''(省略)'''
+    story_prompt = { # (省略) 
+    }
+    stories = ["シチュエーション選択"] + list(story_prompt.keys())
+    chapter_descriptions = { # (省略)
+    }
+
+    # --- サイドバー ---
+    with st.sidebar:
+        st.title("OPTION")
+
+        def change_page(page, chapter="シチュエーション選択"):
+            st.session_state.page = page
+            st.session_state.selected_chapter = chapter
+            if page == "chat":
+                st.session_state.chat_history = []
+                st.session_state.first_chat_message = True
+
+        selected = st.selectbox(
+            "シチュエーション選択", 
+            stories, 
+            index=stories.index(st.session_state.selected_chapter)
+        )
+        if selected != st.session_state.selected_chapter:
+            change_page("chat" if selected != "シチュエーション選択" else "home", chapter=selected)
+            st.rerun()
+
+        st.markdown("---")
+
+        if st.session_state.page != "home" and st.button("🔙 Homeに戻る"):
+            change_page("home")
+            st.rerun()
+        if st.session_state.page != "history" and st.button("💬 会話履歴を確認"):
+            change_page("history")
+            st.rerun()
+        if st.session_state.page != "eval" and st.button("🎩 過去のフィードバック"):
+            change_page("eval")
+            st.rerun()
+        if st.button("🚪 ログアウト"):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
+
+    # --- ページごとの表示ロジック ---
+    page = st.session_state.page
+
+    if page == "home":
+        st.title("ホーム画面")
+        st.subheader("🎮 日本語学習シミュレーションゲームへようこそ！")
+        st.write("このゲームでは、日本でのさまざまなシチュエーションを通して、自然な日本語での会話を練習できます。")
+        st.markdown("### 🧭 遊び方")
+        st.markdown("- 画面左の **サイドバー** から、練習したいシチュエーションを選んでください。")
+        st.markdown("### 📌 ゲームの特徴")
+        st.markdown("- AIとの対話を通じてリアルな会話練習ができます\n- あなたの会話スタイルに合わせてストーリーが変化します\n- 誤りがあった場合もフィードバックがもらえます")
+        st.info("まずは左のサイドバーから、練習したいシチュエーションを選んでみましょう！")
+
+    elif page == "chat":
+        description = chapter_descriptions.get(st.session_state.selected_chapter, "")
+        if description:
+            st.info(description)
+        
+        # (AIの最初の発言、履歴表示、入力フォームのロジックはここに続く...)
+        # (送信処理の中で「目標達成」時に st.session_state.page = "clear" とする)
+
+    elif page == "clear":
+        st.success("ミッション達成！おめでとうございます！")
+        # (評価と要約の生成・保存ロジックはここに続く...)
+        if st.button("🔁 同じ章をもう一度やる"):
+            change_page("chat", chapter=st.session_state.selected_chapter)
+            st.rerun()
+        if st.button("別の章に挑戦する"):
+            change_page("home")
+            st.rerun()
+
+    elif page == "history":
+        st.markdown("### 📜 会話履歴")
+        # (履歴表示ロジックはここに続く...)
+
+    elif page == "eval":
+        st.title("🎩過去のフィードバック")
+        # (評価表示ロジックはここに続く...)
+
 
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
@@ -244,39 +354,40 @@ if st.session_state.logged_in:
             "Chapter 9: 電車の遅延対応",
         ]
         
-        # 1. 現在（変更前）のシチュエーションを覚えておく
-        previous_style = st.session_state.style_label
+        # 1. 現在のセッションのスタイルを取得（これが基準となる）
+        current_style_in_session = st.session_state.get("style_label", "シチュエーション選択")
 
-        # 2. セレクトボックスを描画し、ユーザーが選択した新しいシチュエーションを取得する
-        current_style = st.selectbox("シチュエーション選択", stories, key="selectbox_style")
+        # 2. selectboxの現在のインデックスを計算
+        try:
+            current_index = stories.index(current_style_in_session)
+        except ValueError:
+            current_index = 0 # 万が一見つからない場合はデフォルト
 
-        # 3. 「変更前」と「変更後」が異なるかチェック
-        if current_style != previous_style:
+        # 3. セレクトボックスを描画し、ユーザーが選択した新しい値を取得
+        selected_style = st.selectbox("シチュエーション選択", stories, index=current_index, key="selectbox_style")
+
+        # 4. ユーザーの選択がセッションの状態と異なるかチェック
+        if selected_style != current_style_in_session:
             # 変更があった場合、セッションの状態を更新・リセットする
-            st.session_state.style_label = current_style
+            st.session_state.style_label = selected_style
             
-            # ★問題解決のためのリセット処理
             st.session_state.chat_history = [] 
             st.session_state.first_session = True 
-            st.session_state.clear_screen = False # ←【修正点】クリア画面フラグをリセット
+            st.session_state.clear_screen = False
             
-            # 画面の状態を正しく設定
-            if current_style == "シチュエーション選択":
+            if selected_style == "シチュエーション選択":
                 st.session_state.home = True
                 st.session_state.chat = False
             else:
                 st.session_state.home = False
                 st.session_state.chat = True
             
-            # 変更を画面に反映させるために、スクリプトを再実行
             st.rerun()
         
         # 選択された章に応じて、AIに渡すプロンプトを組み立てる
         if st.session_state.style_label != "シチュエーション選択":
             chapter_index = stories.index(st.session_state.style_label) - 1
-            # story_promptはリストのリストなので、章のプロンプトを取得
             selected_story_prompts = story_prompt[chapter_index]
-            # 複数のプロンプトがある場合も考慮（現状は最初のプロンプトのみ使用）
             st.session_state.agent_prompt = base_prompt + selected_story_prompts[0] + end_prompt
         else:
             st.session_state.agent_prompt = "あなたはゲームのアシスタントです。"
@@ -316,14 +427,9 @@ if st.session_state.logged_in:
                 
         if not st.session_state["style_label"] == "シチュエーション選択" and not st.session_state["show_history"] and not st.session_state["eval"]:
             if st.button("🔙 Homeに戻る"):
-                st.session_state["show_history"] = False
-                st.session_state["home"] = True
-                st.session_state["logged_in"] = True
-                st.session_state["chat_history"] = []
-                st.session_state["clear_screen"] = False
-                st.session_state["chat"] = False
-                st.session_state["style_label"] = "シチュエーション選択"
-                st.session_state["eval"] = False
+                st.session_state.home = True
+                st.session_state.chat = False
+                st.session_state.style_label = "シチュエーション選択" # これが重要
                 st.rerun()
                 
         else:
