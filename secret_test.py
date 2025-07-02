@@ -709,3 +709,4 @@ if st.session_state.logged_in:
                 # パラグラフごとに分けて表示（2重改行で段落分割）
                 for para in selected_body.split("\n\n"):
                     st.markdown(para.strip())
+#不具合未確認　行動履歴作成まで完了　残り動的プロンプト
