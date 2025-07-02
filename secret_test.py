@@ -320,6 +320,7 @@ if st.session_state.logged_in:
             if st.button("🔙 Homeに戻る"):
                 st.session_state.home = True
                 st.session_state.chat = False
+                st.session_state.clear_screen = False
                 st.session_state.style_label = "シチュエーション選択" # これが重要
                 st.rerun()
                 
