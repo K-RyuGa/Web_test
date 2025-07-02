@@ -37,18 +37,26 @@ def register_user(username, password):
     return True
 
 # --- メッセージを追記 ---
-def record_message(username, new_message,where):
+def record_message(username, new_message, where):
     all_users = sheet.get_all_records()
-    for i, user in enumerate(all_users, start=2):  # 2行目からデータ
+    # 列のマッピングを辞書で管理
+    col_map = {"message": 3, "eval": 4, "player_summary": 5}
+    col_index = col_map.get(where)
+    if not col_index:
+        return # 対象の列がなければ何もしない
+
+    for i, user in enumerate(all_users, start=2):
         if user["username"] == username:
-            old_message = user.get(where, "")
-            combined = old_message + "\n" + new_message if old_message else new_message
-            if where == "eval":
-                x = 4
-            else:
-                x = 3
-            sheet.update_cell(i, x, combined)
+            # player_summaryは追記ではなく、常に新しい内容で上書きする
+            if where == 'player_summary':
+                combined = new_message
+            else: # messageとevalは従来通り追記
+                old_message = user.get(where, "")
+                combined = old_message + "\n" + new_message if old_message else new_message
+            
+            sheet.update_cell(i, col_index, combined)
             break
+
 
 # --- メッセージ履歴を取得 ---
 def load_message(username,item):
@@ -430,26 +438,49 @@ if st.session_state.logged_in:
             「文法の誤り」、「単語の誤り」「TPO」の3つの観点から評価してください。最初に点数を100点満点で「n/100」のように出力し、その後、具体的な誤りについて説明してください。
             ただし、点数は厳しくつけてください。出力はプレイヤーに語り掛ける口調にしてください。
         '''
+        # --- Game.pyから移植した要約プロンプト ---
+        summary_prompt = '''
+            あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部を担当してもらいます。
+            このゲームは、日本語学習中の外国人プレイヤーが、架空の日本での生活をシミュレーションしながらリアルな会話を通じて日本語力を向上させることを目的としています。
+            プレイヤーは、さまざまなシチュエーションで登場するキャラクターと会話を重ね、日本での生活を疑似体験しながら、語彙や文法、そして自然な表現を学んでいきます。
+            あなたにはこのゲームのおいて、プレイヤーの行動履歴を、プレイヤーの癖や特徴、ゲーム内で起こした突出すべきアクションの観点から記録してもらいます。
+            プレイヤーの良い点よりも、課題や問題点、個性が現れている部分に注目してください。
+            特に、日本語の使い方の癖や、間違った文法や単語を使用していないか注目して。
+            以下の文章はこのゲームでの会話履歴です。
+            以下の文章から、プレイヤーの行動履歴を作成してください。
+            出力は不要な文字を含まずに、箇条書きにして出力してください。
+        '''
         
         conversation_log = "\n".join(st.session_state.chat_history)
-        
         client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
+        # --- 評価を生成して表示・記録 ---
         evaluation_response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": evaluation_prompt},
                 {"role": "user", "content": conversation_log}
             ],
-            temperature=0.5, # 評価なので安定した出力を求める
+            temperature=0.5,
         )
-
         evaluation_result = evaluation_response.choices[0].message.content
         st.markdown("### 会話の評価")
         st.markdown(evaluation_result)
-        
-        # 日本時間で評価を記録
-        now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\\n')
+        now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\n')
         record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
+
+        # --- 行動履歴の要約を生成して記録 ---
+        summary_response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": summary_prompt},
+                {"role": "user", "content": conversation_log}
+            ],
+            temperature=0.5,
+        )
+        summary_result = summary_response.choices[0].message.content
+        # この要約は画面には表示せず、裏側で記録する
+        record_message(st.session_state.username, summary_result, 'player_summary')
 
       
 
