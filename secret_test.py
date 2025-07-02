@@ -497,6 +497,7 @@ if st.session_state.logged_in:
                                             word-wrap: break-word;
                                             text-align: left;
                                             font-size: 16px;
+                                            color:black;
                                         '>
                                             {line.replace("ユーザー:", "")}
                                         </div>
@@ -518,6 +519,7 @@ if st.session_state.logged_in:
                                             word-wrap: break-word;
                                             text-align: left;
                                             font-size: 16px;
+                                            color:black;
                                         '>
                                             {line.replace("AI:", "")}
                                         </div>
