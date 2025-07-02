@@ -434,9 +434,7 @@ if st.session_state.logged_in:
                 # Google Sheetsに記録（関数が定義されている前提）
                 if st.session_state["first_session"]:
                     now = datetime.now(JST).strftime('%Y/%m/%d %H:%M')
-                    full_message = st.session_state["style_label"] + now + "
-" + f"ユーザー: {user_input}
-AI: {reply}"
+                    full_message = st.session_state["style_label"] + now + f"ユーザー: {user_input}AI: {reply}"
                     st.session_state["first_session"] = False
                 else:
                     full_message = f"ユーザー: {user_input}\nAI: {reply}"
