@@ -67,6 +67,46 @@ def load_message(username,item):
             return user.get(item, "")
     return ""
 
+# --- 動的プロンプト生成機能 (Game.pyから移植・改造) ---
+def make_new_prompt(username, base_prompt_text, selected_prompt_text):
+    making_prompt = '''
+        あなたにはパーソナライズされたプロンプト生成を行っていただきます。
+        ベースとなるプロンプトとパーソナライズしたい人の特徴を与えるので、ベースのプロンプトに追加、改善を行ってください。ただし、具体的な行動を減らしてはいけません。
+        出力は余計な文言を含まずに、修正したプロンプトのみを出力してください。
+        ベースとなるプロンプト
+        「
+    '''
+    making_prompt_end = '''
+        」
+        これらの特徴を踏まえ、過去間違った言葉遣いが修正できているか確認するために、自然にその言葉を使わせるような会話方針にする、など、日本語学習に最適なプロンプトを生成してください。
+        過去の発話履歴をもとに、プレイヤーが間違えやすい部分を予測し、その理解が十分かどうかを異なる方法で確認してください。
+        具体的な間違いの内容に過度に焦点を当てるのではなく、例えば「は」と「が」の使い方に関して過去の誤りがあった場合、その背景にある助詞全体の理解が浅い可能性を考慮し、異なる形で助詞の理解を深めるための確認を行ってください。
+        過去にした特定の誤りにこだわることも禁止します。あくまでプレイヤーの過去の誤りから想定される苦手分野を克服できるようなプロンプト生成を心がけてください。
+        しかし、ゲーム内容が不自然になってはいけません。また、「目標達成」はゲームクリアのキーワードになっているので注意してください。
+    '''
+    
+    # Googleスプレッドシートからプレイヤーの要約データを読み込む
+    persona = load_message(username, "player_summary")
+    if not persona:
+        # 要約データがない場合は、パーソナライズせず元のプロンプトを返す
+        return base_prompt_text + selected_prompt_text
+
+    persona_text = "」\nプレイヤーの行動履歴\n" + persona
+    
+    # 動的プロンプト生成のためのAPI呼び出し
+    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+    messages = [{
+        "role": "system", 
+        "content": making_prompt + base_prompt_text + selected_prompt_text + persona_text + making_prompt_end
+    }]
+    
+    completion = client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        temperature=0
+    )
+    return completion.choices[0].message.content
+
 # --- セッション管理初期化 ---
 st.session_state.setdefault("logged_in", False)
 st.session_state.setdefault("username", "")
@@ -275,14 +315,6 @@ if st.session_state.logged_in:
             
             st.rerun()
         
-        # 選択された章に応じて、AIに渡すプロンプトを組み立てる
-        if st.session_state.style_label != "シチュエーション選択":
-            chapter_index = stories.index(st.session_state.style_label) - 1
-            selected_story_prompts = story_prompt[chapter_index]
-            st.session_state.agent_prompt = base_prompt + selected_story_prompts[0] + end_prompt
-        else:
-            st.session_state.agent_prompt = "あなたはゲームのアシスタントです。"
-    
         st.markdown("---")
 
         # show_historyが未定義ならFalseで初期化
@@ -403,10 +435,27 @@ if st.session_state.logged_in:
         # --- AIが会話を始める処理 ---
         if st.session_state.first_session and st.session_state.chat:
             client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
+            # --- ★動的プロンプト生成をここで行う --- #
+            # 1. 現在の章の基本プロンプトを取得
+            chapter_index = stories.index(st.session_state.style_label) - 1
+            selected_story_prompt = story_prompt[chapter_index][0]
+            
+            # 2. プレイヤーの過去のデータを使って、プロンプトをパーソナライズする
+            personalized_prompt = make_new_prompt(
+                st.session_state.username, 
+                base_prompt, 
+                selected_story_prompt
+            )
+            
+            # 3. 最終的なシステムプロンプトを組み立てる
+            final_system_prompt = personalized_prompt + end_prompt
+            # --- ★動的プロンプト生成ここまで --- #
+
             # AIに自然な会話開始を促すためのプロンプト
             start_prompt = "あなたの役割に沿って、日本語学習者である相手に自然な形で話しかけ、会話を始めてください。"
             messages = [
-                {"role": "system", "content": st.session_state.agent_prompt},
+                {"role": "system", "content": final_system_prompt},
                 {"role": "user", "content": start_prompt}
             ]
             response = client.chat.completions.create(
