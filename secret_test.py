@@ -148,6 +148,7 @@ if st.session_state.logged_in:
                 st.session_state["clear_screen"] = False
                 st.session_state["chat"] = False
                 st.session_state["eval"] = False
+                st.session_state["first_session"] = True    
 
                 
                 st.rerun()
@@ -155,6 +156,7 @@ if st.session_state.logged_in:
         if not st.session_state["eval"]:
             if st.button("🎩 過去のフィードバック"):      
                 st.session_state["show_history"] = False
+                st.session_state["first_session"] = True
                 st.session_state["home"] = False
                 st.session_state["logged_in"] = True
                 st.session_state["chat_history"] = []
@@ -174,6 +176,7 @@ if st.session_state.logged_in:
                 st.session_state["chat"] = False
                 st.session_state["style_label"] = False
                 st.session_state["eval"] = False
+                st.session_state["first_session"] = True
                 st.rerun()
                 
         else:
@@ -187,6 +190,7 @@ if st.session_state.logged_in:
                     st.session_state["clear_screen"] = False
                     st.session_state["chat"] = False
                     st.session_state["eval"] = False
+                    st.session_state["first_session"] = True
                     st.rerun()
 
         # ログアウト
