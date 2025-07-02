@@ -458,7 +458,7 @@ if st.session_state.logged_in:
             
     if st.session_state["clear_screen"]:
         
-        st.success("目標達成！おめでとうございます！")
+        st.success("ミッション達成！おめでとうございます！")
         
         # --- Game.pyから移植した詳細な評価プロンプト ---
         evaluation_prompt = '''
@@ -602,7 +602,7 @@ if st.session_state.logged_in:
                 
                 record_message(st.session_state.username, full_message,"message")
                 
-                if "目標達成" in reply and not st.session_state["home"]:
+                if "目標達成" in reply and not st.session_state["home"] or "ミッション達成" in reply and not st.session_state["home"]:
                     st.session_state["clear_screen"] = True
                     st.session_state["chat"] = False
                     st.session_state["chat_histry"] = []
