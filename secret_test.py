@@ -247,8 +247,10 @@ if st.session_state.logged_in:
             # 変更があった場合、セッションの状態を更新・リセットする
             st.session_state.style_label = current_style
             
+            # ★問題解決のためのリセット処理
             st.session_state.chat_history = [] 
             st.session_state.first_session = True 
+            st.session_state.clear_screen = False # ←【修正点】クリア画面フラグをリセット
             
             # 画面の状態を正しく設定
             if current_style == "シチュエーション選択":
