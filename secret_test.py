@@ -124,39 +124,12 @@ if st.session_state.logged_in:
             "Chapter EX: English mode": "私は英語の練習がしたいです。簡単な単語を意識して私と英語で会話してください",
         }
         
-        # --- 変更点1：シチュエーション変更を検知し、チャットをリセット ---
-        # AIが会話を始める機能を正しく動作させるため、シチュエーションの変更を検知するロジックを追加します
-        keys = list(agent_prompts.keys())
-        
-        # 現在のスタイルを取得（なければデフォルト）
-        current_style = st.session_state.get("style_label", "シチュエーション選択")
-        if current_style not in keys:
-            current_style = "シチュエーション選択"
-        
-        # selectboxの現在のインデックスを計算
-        try:
-            index = keys.index(current_style)
-        except ValueError:
-            index = 0
-
-        # selectboxを配置
-        new_style = st.selectbox("シチュエーション選択", keys, index=index)
-
-        # スタイルが変更されたら、チャットの状態をリセット
-        if new_style != current_style:
-            st.session_state["style_label"] = new_style
-            st.session_state.chat_history = []
-            st.session_state.first_session = True  # ★AIに会話を始めさせるための重要なフラグ
-            st.session_state.clear_screen = False
-            
-            if new_style == "シチュエーション選択":
-                st.session_state.home = True
-                st.session_state.chat = False
-            else:
-                st.session_state.home = False
-                st.session_state.chat = True
-            st.rerun()
-        
+        if not st.session_state["style_label"]:
+            st.session_state["style_label"] = "シチュエーション選択" 
+            st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
+        else:
+            st.session_state["style_label"] = st.selectbox("シチュエーション選択", list(agent_prompts.keys()))
+                
         st.session_state["agent_prompt"] = agent_prompts[st.session_state["style_label"]]
         st.markdown("---")
 
@@ -180,7 +153,7 @@ if st.session_state.logged_in:
                 st.rerun()
                 
         if not st.session_state["eval"]:
-            if st.button("🎩 過去のフィードバック"):
+            if st.button("🎩 過去のフィードバック"):      
                 st.session_state["show_history"] = False
                 st.session_state["home"] = False
                 st.session_state["logged_in"] = True
@@ -227,6 +200,7 @@ if st.session_state.logged_in:
             st.session_state["first_session"] = True
             st.session_state["eval"] = False
             st.session_state.username = ""
+            #st.session_state["username"] = False
             st.session_state.chat_history = []
             st.session_state["style_label"] = "シチュエーション選択"
             st.rerun()
@@ -243,13 +217,20 @@ if st.session_state.logged_in:
         st.markdown("- 画面左の **サイドバー** から、練習したいシチュエーションを選んでください。")
         
         st.markdown("### 📌 ゲームの特徴")
-        st.markdown('''
+        st.markdown("""
         - AIとの対話を通じてリアルな会話練習ができます  
         - あなたの会話スタイルに合わせてストーリーが変化します  
         - 誤りがあった場合もフィードバックがもらえます
-        ''')
+        """)
      
         st.info("まずは左のサイドバーから、練習したいシチュエーションを選んでみましょう！")
+        # st.markdown("### 💬 質問がある場合")
+        # st.write("画面下のチャット欄に質問を入力してください。できる限り丁寧にお答えします。")
+        
+        if st.session_state["style_label"] != "シチュエーション選択":
+            st.session_state["home"] = False
+            st.session_state["chat"] = True
+            st.rerun()
         
     # --- 説明文定義 ---
     chapter_descriptions = {
@@ -267,36 +248,10 @@ if st.session_state.logged_in:
     }
     if not st.session_state["home"] and not st.session_state["show_history"] and not st.session_state["eval"]:
         
-        selected_chapter = st.session_state["style_label"]
+        selected_chapter = st.session_state["style_label"] # すでに selectbox で選ばれている
         description = chapter_descriptions.get(selected_chapter, "")
         if description:
             st.info(description)
-
-        # --- 変更点2：AIが会話を始める処理 ---
-        if st.session_state.get("first_session", False) and st.session_state.get("chat", False):
-            # AIに自然な会話開始を促すためのプロンプト
-            start_prompt = "あなたの役割に沿って、日本語学習者である相手に自然な形で話しかけ、会話を始めてください。"
-            
-            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-            messages = [
-                {"role": "system", "content": st.session_state["agent_prompt"]},
-                {"role": "user", "content": start_prompt}
-            ]
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=messages,
-                temperature=0.7,
-            )
-            reply = response.choices[0].message.content
-        
-            st.session_state.chat_history.append(f"AI: {reply}")
-            st.session_state.first_session = False
-
-            now = time.strftime('%Y/%m/%d %H:%M')
-            full_message = st.session_state["style_label"] + " " + now + "\n" + f"AI: {reply}"
-            record_message(st.session_state.username, full_message, "message")
-            
-            st.rerun()
             
     if st.session_state["clear_screen"]:
         
@@ -321,7 +276,11 @@ if st.session_state.logged_in:
         now = time.strftime('%Y/%m/%d %H:%M\n')
         record_message(st.session_state.username, st.session_state["style_label"] + now  + summary_result,"eval")
 
+      
+
+        # 「もう一度やる」ボタン
         if st.button("🔁 最初からやり直す"):
+            
             st.session_state.chat_history = []
             st.session_state["clear_screen"] = False
             st.session_state["show_history"] = False
@@ -330,13 +289,16 @@ if st.session_state.logged_in:
             st.session_state["chat"] = True
             st.session_state["first_session"] = True
             st.rerun()
+    
+       #st.markdown("### 💬 ")
 
-    # --- セッション中の履歴表示 (元のコードをそのまま使用) ---
+    # --- セッション中の履歴表示 ---
     if st.session_state.chat_history and not st.session_state["clear_screen"]:
         for msg in st.session_state.chat_history:
             if msg.startswith("ユーザー:"):
+                # ユーザー → 右寄せ（グリーン）
                 st.markdown(
-                    f'''
+                    f"""
                     <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
                         <div style='
                             background-color: #DCF8C6;
@@ -350,12 +312,14 @@ if st.session_state.logged_in:
                             {msg.replace("ユーザー:", "")}
                         </div>
                     </div>
-                    ''',
+                    """,
                     unsafe_allow_html=True
                 )
+
             elif msg.startswith("AI:"):
+                # AI → 左寄せ（グレー）
                 st.markdown(
-                    f'''
+                    f"""
                     <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
                         <div style='
                             background-color: #E6E6EA;
@@ -369,12 +333,39 @@ if st.session_state.logged_in:
                             {msg.replace("AI:", "")}
                         </div>
                     </div>
-                    ''',
+                    """,
                     unsafe_allow_html=True
                 )
 
-    # --- 入力フォーム (元のコードをそのまま使用) ---
-    if st.session_state["chat"] and not st.session_state.get("first_session", False):
+
+    if st.session_state["chat"]:
+        # ✅ 初回セッションならAIのメッセージから開始（仮のユーザー入力なし）
+        if st.session_state["first_session"]:
+            system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
+            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
+            messages = [{"role": "system", "content": system_prompt}]
+
+            # ここが重要：ユーザー入力なしでAPIを呼び出す（AIの第一声）
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                temperature=0.7,
+            )
+            reply = response.choices[0].message.content
+
+            # ユーザーなしのAI発話のみを履歴に単体で追加
+            st.session_state.chat_history = [f"AI: {reply}"]
+
+            # Google Sheetsへの記録（片方だけ記録）
+            now = time.strftime('%Y/%m/%d %H:%M')
+            full_message = st.session_state["style_label"] + now + "\n" + f"AI: {reply}"
+            record_message(st.session_state.username, full_message, "message")
+
+            # セッションフラグ更新
+            st.session_state["first_session"] = False
+
+        # ✅ チャットフォーム
         with st.form(key="chat_form", clear_on_submit=True):
             col1, col2 = st.columns([5, 1])
             with col1:
@@ -382,9 +373,11 @@ if st.session_state.logged_in:
             with col2:
                 submit_button = st.form_submit_button("送信", use_container_width=True)
 
+        # --- 送信処理 ---
         if submit_button:
             if user_input.strip():
                 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
                 system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
                 messages = [{"role": "system", "content": system_prompt}]
                 for msg in st.session_state.get("chat_history", []):
@@ -392,6 +385,7 @@ if st.session_state.logged_in:
                         messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
                     elif msg.startswith("AI:"):
                         messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
+
                 messages.append({"role": "user", "content": user_input})
 
                 response = client.chat.completions.create(
@@ -400,19 +394,14 @@ if st.session_state.logged_in:
                     temperature=0.7,
                 )
                 reply = response.choices[0].message.content
-            
+
+                # ユーザー→AIを1セットで履歴・保存
                 st.session_state.chat_history.append(f"ユーザー: {user_input}")
                 st.session_state.chat_history.append(f"AI: {reply}")
 
-                if st.session_state.get("first_session", True): # このブロックは元のコードにはありませんでしたが、念のため残します
-                    now = time.strftime('%Y/%m/%d %H:%M')
-                    full_message = st.session_state["style_label"] + now + "\n" + f"ユーザー: {user_input}\nAI: {reply}"
-                    st.session_state["first_session"] = False
-                else:
-                    full_message = f"ユーザー: {user_input}\nAI: {reply}"
-                
-                record_message(st.session_state.username, full_message,"message")
-                
+                full_message = f"ユーザー: {user_input}\nAI: {reply}"
+                record_message(st.session_state.username, full_message, "message")
+
                 if "目標達成" in reply and not st.session_state["home"]:
                     st.session_state["clear_screen"] = True
                     st.session_state["chat"] = False
@@ -422,24 +411,34 @@ if st.session_state.logged_in:
                 st.rerun()
             else:
                 st.warning("メッセージが空です。")
+
         
     elif st.session_state.show_history:
         st.markdown("### 📜 会話履歴")
+
         history = load_message(st.session_state.username, "message")
+
         if not history.strip():
             st.info("（会話履歴はまだありません）")
         else:
+            # 「Chapter + 日付」ごとのブロックを抽出
             pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})(.*?)(?=Chapter \d+: |\Z)"
             matches = re.findall(pattern, history, re.DOTALL)
+
             if not matches:
                 st.warning("履歴の解析に失敗しました。")
             else:
+                # タイトルだけをリスト化（選択肢）
                 options = [title.strip() for title, _ in matches]
-                selected = st.selectbox("表示する会話を選んでください", options[::-1])
+                selected = st.selectbox("表示する会話を選んでください", options[::-1])  # 新しい順
+
+                # 選ばれたタイトルのブロックのみ表示
                 selected_block = next(((t, c) for t, c in matches if t.strip() == selected), None)
+
                 if selected_block:
                     title, content = selected_block
                     st.markdown(f"#### {title.strip()}")
+
                     lines = content.strip().split("\n")
                     for line in lines:
                         line = line.strip()
@@ -447,7 +446,7 @@ if st.session_state.logged_in:
                             col1, col2 = st.columns([4, 6])
                             with col2:
                                 st.markdown(
-                                    f'''
+                                    f"""
                                     <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
                                         <div style='
                                             background-color: #DCF8C6;
@@ -461,14 +460,14 @@ if st.session_state.logged_in:
                                             {line.replace("ユーザー:", "")}
                                         </div>
                                     </div>
-                                    ''',
+                                    """,
                                     unsafe_allow_html=True
                                 )
                         elif line.startswith("AI:"):
                             col1, col2 = st.columns([6, 4])
                             with col1:
                                 st.markdown(
-                                    f'''
+                                    f"""
                                     <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
                                         <div style='
                                             background-color: #E6E6EA;
@@ -482,24 +481,40 @@ if st.session_state.logged_in:
                                             {line.replace("AI:", "")}
                                         </div>
                                     </div>
-                                    ''',
+                                    """,
                                     unsafe_allow_html=True
                                 )
 
+
     elif st.session_state["eval"]:
         st.title("🎩過去のフィードバック")
+
+        # メッセージ取得（load_messageは既存関数）
         message = load_message(st.session_state["username"], "eval")
+
         if not message:
             st.info("フィードバックはまだ登録されていません。")
         else:
+
+            # 「Chapter X: ○○YYYY/MM/DD hh:mm」ごとにフィードバックを抽出
             pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})\n(.*?)(?=Chapter \d+: |\Z)"
             matches = re.findall(pattern, message, re.DOTALL)
+
             if not matches:
                 st.warning("フィードバックが解析できませんでした。")
             else:
+                # セレクトボックスの選択肢用にタイトルだけ使用
                 feedback_dict = {title.strip(): body.strip() for title, body in matches}
+
+                # セレクトボックスでフィードバック選択
                 selected_title = st.selectbox("表示するフィードバックを選んでください", sorted(feedback_dict.keys(), reverse=True))
+
+                # 表示（タイトルは非表示）
                 st.markdown("### フィードバック内容")
                 selected_body = feedback_dict[selected_title]
+
+                # パラグラフごとに分けて表示（2重改行で段落分割）
                 for para in selected_body.split("\n\n"):
                     st.markdown(para.strip())
+
+#次やること　AIから会話　動的プロンプト
