@@ -4,6 +4,10 @@ import gspread
 from google.oauth2.service_account import Credentials
 import time
 import re
+from datetime import datetime, timezone, timedelta
+
+# --- 日本時間(JST)設定 ---
+JST = timezone(timedelta(hours=+9), 'JST')
 
 # --- Google Sheets 認証 ---
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -298,8 +302,7 @@ if st.session_state.logged_in:
             st.session_state.chat_history.append(f"AI: {reply}")
             st.session_state.first_session = False # AIが話したので、次はユーザーの番
 
-            now = time.strftime('%Y/%m/%d %H:%M')
-            full_message = st.session_state["style_label"] + " " + now + "\n" + f"AI: {reply}"
+            now = datetime.now(JST).strftime('%Y/%m/%d %H:%M')            full_message = st.session_state["style_label"] + " " + now + "\n" + f"AI: {reply}"
             record_message(st.session_state.username, full_message, "message")
             st.rerun()
             
@@ -430,8 +433,10 @@ if st.session_state.logged_in:
 
                 # Google Sheetsに記録（関数が定義されている前提）
                 if st.session_state["first_session"]:
-                    now = time.strftime('%Y/%m/%d %H:%M')
-                    full_message = st.session_state["style_label"] + now + "\n" + f"ユーザー: {user_input}\nAI: {reply}"
+                    now = datetime.now(JST).strftime('%Y/%m/%d %H:%M')
+                    full_message = st.session_state["style_label"] + now + "
+" + f"ユーザー: {user_input}
+AI: {reply}"
                     st.session_state["first_session"] = False
                 else:
                     full_message = f"ユーザー: {user_input}\nAI: {reply}"
