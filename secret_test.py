@@ -308,6 +308,7 @@ if st.session_state.logged_in:
                             word-wrap: break-word;
                             text-align: left;
                             font-size: 16px;
+                            color:black;
                         '>
                             {msg.replace("ユーザー:", "")}
                         </div>
@@ -329,6 +330,7 @@ if st.session_state.logged_in:
                             word-wrap: break-word;
                             text-align: left;
                             font-size: 16px;
+                            color:black;
                         '>
                             {msg.replace("AI:", "")}
                         </div>
@@ -364,6 +366,7 @@ if st.session_state.logged_in:
 
             # セッションフラグ更新
             st.session_state["first_session"] = False
+            st.rerun()
 
         # ✅ チャットフォーム
         with st.form(key="chat_form", clear_on_submit=True):
