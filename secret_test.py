@@ -302,7 +302,8 @@ if st.session_state.logged_in:
             st.session_state.chat_history.append(f"AI: {reply}")
             st.session_state.first_session = False # AIが話したので、次はユーザーの番
 
-            now = datetime.now(JST).strftime('%Y/%m/%d %H:%M')            full_message = st.session_state["style_label"] + " " + now + "\n" + f"AI: {reply}"
+            now = datetime.now(JST).strftime('%Y/%m/%d %H:%M')            
+            full_message = st.session_state["style_label"] + " " + now + "\n" + f"AI: {reply}"
             record_message(st.session_state.username, full_message, "message")
             st.rerun()
             
