@@ -426,6 +426,7 @@ if st.session_state.logged_in:
         
         "Chapter 9": "電車の遅延対応\n通勤や外出中に電車が遅延してしまった場合の対応を学びます。駅員とのやり取りを通じて、次の行動を考え、無事に目的地に到着できるように対処しましょう。"
     }
+    
     if not st.session_state["home"] and not st.session_state["show_history"] and not st.session_state["eval"]:
         
         selected_chapter = st.session_state["style_label"] # すでに selectbox で選ばれている
@@ -455,7 +456,6 @@ if st.session_state.logged_in:
             now = datetime.now(JST).strftime('%Y/%m/%d %H:%M')            
             full_message = st.session_state["style_label"] + " " + now + "\n" + f"AI: {reply}"
             record_message(st.session_state.username, full_message, "message")
-            st.rerun()
             
     if st.session_state["clear_screen"]:
         
