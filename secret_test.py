@@ -400,7 +400,7 @@ if st.session_state.logged_in:
 
         # チャット中は「履歴を見る」ボタンを表示、履歴中は「戻る」ボタンを表示
         if not st.session_state["show_history"]:
-            if st.button("💬 会話履歴を確認"):
+            if st.button("💬 会話履歴を確認", key="view_history"):
                 
                 st.session_state["show_history"] = True
                 st.session_state["home"] = False
@@ -414,7 +414,7 @@ if st.session_state.logged_in:
                 st.rerun()
                 
         if not st.session_state["eval"]:
-            if st.button("🎩 過去のフィードバック"):
+            if st.button("🎩 過去のフィードバック", key="view_feedback"):
                 st.session_state["show_history"] = False
                 st.session_state["home"] = False
                 st.session_state["logged_in"] = True
@@ -426,15 +426,11 @@ if st.session_state.logged_in:
                 st.rerun()
                 
         if not st.session_state["style_label"] == "シチュエーション選択" and not st.session_state["show_history"] and not st.session_state["eval"]:
-            if st.button("🔙 Homeに戻る"):
-                st.session_state.home = True
-                st.session_state.chat = False
-                st.session_state.style_label = "シチュエーション選択" # これが重要
-                st.rerun()
+            if st.button("🔙 Homeに戻る", key="back_to_home_from_chat"):
                 
         else:
             if not st.session_state["home"]:
-                if st.button("🔙 Chatに戻る"):
+                if st.button("🔙 Chatに戻る", key="back_to_chat"):
             
                     st.session_state["show_history"] = False
                     st.session_state["home"] = True
@@ -446,7 +442,7 @@ if st.session_state.logged_in:
                     st.rerun()
 
         # ログアウト
-        if st.button("🚪 ログアウト"):
+        if st.button("🚪 ログアウト", key="logout"):
         
             st.session_state["show_history"] = False
             st.session_state["home"] = True
@@ -591,7 +587,7 @@ if st.session_state.logged_in:
       
 
         # 「もう一度やる」ボタン
-        if st.button("🔁 最初からやり直す"):
+        if st.button("🔁 最初からやり直す", key="retry_chapter"):
             
             st.session_state.chat_history = []
             st.session_state["clear_screen"] = False
