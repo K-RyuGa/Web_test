@@ -667,7 +667,7 @@ if st.session_state.logged_in:
         with st.form(key="chat_form", clear_on_submit=True):
             col1, col2 = st.columns([5, 1])
             with col1:
-                user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed", autofocus=True)
+                user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
             with col2:
                 submit_button = st.form_submit_button("送信", use_container_width=True)
 
