@@ -104,9 +104,7 @@ def make_new_prompt(username, base_prompt_text, selected_prompt_text):
         # 要約データがない場合は、パーソナライズせず元のプロンプトを返す
         return base_prompt_text + selected_prompt_text
 
-    persona_text = "」
-プレイヤーの言語的課題リスト
-" + persona
+    persona_text = "」プレイヤーの言語的課題リスト" + persona
     
     # 動的プロンプト生成のためのAPI呼び出し
     client = OpenAI(api_key=st.secrets["openai"]["api_key"])
