@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from openai import OpenAI
 import gspread
 from google.oauth2.service_account import Credentials
@@ -668,6 +669,19 @@ if st.session_state.logged_in:
             col1, col2 = st.columns([5, 1])
             with col1:
                 user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
+                components.html(
+                    f"""
+                        <div>some hidden container</div>
+                        <p>{st.session_state.counter if 'counter' in st.session_state else 0}</p>
+                        <script>
+                            var input = window.parent.document.querySelectorAll("input[type=text]");
+                            for (var i = 0; i < input.length; ++i) {{
+                                input[i].focus();
+                            }}
+                    </script>
+                    """,
+                    height=0,
+                )
             with col2:
                 submit_button = st.form_submit_button("送信", use_container_width=True)
 
