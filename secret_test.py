@@ -487,7 +487,7 @@ if st.session_state.logged_in:
             response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
-                temperature=0.7,
+                temperature=0.25,
             )
             reply = response.choices[0].message.content
             
@@ -578,7 +578,7 @@ if st.session_state.logged_in:
                 {"role": "system", "content": evaluation_prompt},
                 {"role": "user", "content": conversation_log}
             ],
-            temperature=0.5,
+            temperature=0.25,
         )
         evaluation_result = evaluation_response.choices[0].message.content
         st.markdown("### 会話の評価")
@@ -593,7 +593,7 @@ if st.session_state.logged_in:
                 {"role": "system", "content": summary_prompt},
                 {"role": "user", "content": conversation_log}
             ],
-            temperature=0.5,
+            temperature=0.25,
         )
         summary_result = summary_response.choices[0].message.content
         # この要約は画面には表示せず、裏側で記録する
@@ -665,8 +665,10 @@ if st.session_state.logged_in:
 
     # --- 入力フォーム ---
     if st.session_state["chat"] and not st.session_state.first_session:
+        
         with st.form(key="chat_form", clear_on_submit=True):
             col1, col2 = st.columns([5, 1])
+            
             with col1:
                 user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
                 components.html(
@@ -682,6 +684,7 @@ if st.session_state.logged_in:
                     """,
                     height=0,
                 )
+                
             with col2:
                 submit_button = st.form_submit_button("送信", use_container_width=True)
 
@@ -706,7 +709,7 @@ if st.session_state.logged_in:
                 response = client.chat.completions.create(
                     model="gpt-4o",
                     messages=messages,
-                    temperature=0.7,
+                    temperature=0.25,
                 )
                 reply = response.choices[0].message.content
             
@@ -841,4 +844,3 @@ if st.session_state.logged_in:
                 # パラグラフごとに分けて表示（2重改行で段落分割）
                 for para in selected_body.split("\n\n"):
                     st.markdown(para.strip())
-
