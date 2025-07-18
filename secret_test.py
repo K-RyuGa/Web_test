@@ -477,6 +477,7 @@ if st.session_state.logged_in:
             
             # 3. 最終的なシステムプロンプトを組み立てる
             final_system_prompt = personalized_prompt + end_prompt
+            st.session_state.agent_prompt = final_system_prompt #役割を記憶させる
             # --- ★動的プロンプト生成ここまで --- #
 
             # AIに自然な会話開始を促すためのプロンプト
