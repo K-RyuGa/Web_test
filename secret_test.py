@@ -414,75 +414,38 @@ if st.session_state.logged_in:
             st.session_state["style_label"] = "シチュエーション選択"
             st.rerun()
 
-    if st.session_state["home"]:
-        
+    # ----------------------------------------------------------------------------------
+    # 画面表示制御
+    # ----------------------------------------------------------------------------------
+    if st.session_state.home:
         st.title("ホーム画面")
-    
         st.subheader("🎮 日本語学習シミュレーションゲームへようこそ！")
-
         st.write("このゲームでは、日本でのさまざまなシチュエーションを通して、自然な日本語での会話を練習できます。")
-
         st.markdown("### 🧭 遊び方")
         st.markdown("- 画面左の **サイドバー** から、練習したいシチュエーションを選んでください。")
-        
         st.markdown("### 📌 ゲームの特徴")
         st.markdown("""
         - AIとの対話を通じてリアルな会話練習ができます  
         - あなたの会話スタイルに合わせてストーリーが変化します  
         - 誤りがあった場合もフィードバックがもらえます
         """)
-     
         st.info("まずは左のサイドバーから、練習したいシチュエーションを選んでみましょう！")
-        # st.markdown("### 💬 質問がある場合")
-        # st.write("画面下のチャット欄に質問を入力してください。できる限り丁寧にお答えします。")
-        
-        if st.session_state["style_label"] != "シチュエーション選択":
-            st.session_state["home"] = False
-            st.session_state["chat"] = True
-            st.rerun()
-        
-    # --- 説明文定義 ---
-    chapter_descriptions = {
-        "Chapter 1: 空港での手続き": "日本に到着！ 空港スタッフの案内に従って入国手続きを進めましょう。**目標は、荷物を受け取る場所がどこかを聞き取り、理解することです。**",
-        "Chapter 2: スーパーでの買い物": "スーパーで買い物をします。店員さんの案内に従って、レジでの会計を体験しましょう。**目標は、支払い方法を伝えて、無事に会計を完了させることです。**",
-        "Chapter 3: 友人との会話": "新しくできた友人と会話が弾みます。趣味などについて話し、仲良くなりましょう。**目標は、次に会う約束を取り付けることです。**",
-        "Chapter 4: 職場の自己紹介": "新しい職場で、同僚に自己紹介をします。フレンドリーな会話を楽しみましょう。**目標は、相手に失礼なく、自分の名前を伝えて自己紹介を完了させることです。**",
-        "Chapter 5: 病院での診察": "病院で診察を受けます。お医者さんに、体の具合が悪いことを伝えましょう。**目標は、自分の症状を正確に説明し、診察を無事に終えることです。**",
-        "Chapter 6: 会議での発言": "職場の会議に参加します。同僚から意見を求められるので、自分の考えを述べてみましょう。**目標は、会議の流れを汲んで、自分の意見をしっかりと発言することです。**",
-        "Chapter 7: お祭りに参加": "友人と一緒に日本のお祭りにやってきました。文化やマナーについて教わりながら、お祭りを楽しみましょう。**目標は、友人との会話を楽しみ、お祭りを満喫していることを伝えることです。**",
-        "Chapter 8: 市役所での手続き": "市役所で行政手続きに挑戦します。窓口担当者の説明をよく聞いてください。**目標は、指示に従って、必要な手続きを完了させることです。**",
-        "Chapter 9: 電車の遅延対応": "電車が遅れて困っています。駅員さんに状況を尋ね、どうすればよいか確認しましょう。**目標は、駅員さんの指示を理解し、次の行動を決めることです。**",
-    }
 
-    if st.session_state.chat:
+    elif st.session_state.chat:
+        # --- シナリオ説明 ---
         description = chapter_descriptions.get(st.session_state.style_label, "")
         if description:
             st.info(description)
 
-    if not st.session_state["home"] and not st.session_state["show_history"] and not st.session_state["eval"]:
-
-        # --- AIが会話を始める処理 ---
-        if st.session_state.first_session and st.session_state.chat:
+        # --- AIの初回発言 ---
+        if st.session_state.first_session:
             client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-
-            # --- ★動的プロンプト生成をここで行う --- #
-            # 1. 現在の章の基本プロンプトを取得
             chapter_index = stories.index(st.session_state.style_label) - 1
             selected_story_prompt = story_prompt[chapter_index][0]
-            
-            # 2. プレイヤーの過去のデータを使って、プロンプトをパーソナライズする
-            personalized_prompt = make_new_prompt(
-                st.session_state.username, 
-                base_prompt, 
-                selected_story_prompt
-            )
-            
-            # 3. 最終的なシステムプロンプトを組み立てる
+            personalized_prompt = make_new_prompt(st.session_state.username, base_prompt, selected_story_prompt)
             final_system_prompt = personalized_prompt + end_prompt
-            st.session_state.agent_prompt = final_system_prompt #役割を記憶させる
-            # --- ★動的プロンプト生成ここまで --- #
+            st.session_state.agent_prompt = final_system_prompt
 
-            # AIに自然な会話開始を促すためのプロンプト
             start_prompt = "あなたの役割に沿って、日本語学習者である相手に自然な形で話しかけ、会話を始めてください。"
             messages = [
                 {"role": "system", "content": final_system_prompt},
@@ -496,370 +459,60 @@ if st.session_state.logged_in:
             reply = response.choices[0].message.content
             
             st.session_state.chat_history.append(f"AI: {reply}")
-            st.session_state.first_session = False # AIが話したので、次はユーザーの番
+            st.session_state.first_session = False
 
             now = datetime.now(JST).strftime('%Y/%m/%d %H:%M')            
             full_message = st.session_state["style_label"] + " " + now + "\n" + f"AI: {reply}"
             record_message(st.session_state.username, full_message, "message")
-            
-    if st.session_state["clear_screen"]:
-        
-        st.success("ミッション達成！おめでとうございます！")
-        
-        # --- Game.pyから移植した詳細な評価プロンプト ---
-        evaluation_prompt = '''
-            あなたには、私が作成する「日本語学習者支援ゲーム」の評価システムを担当してもらいます。
-            あなたの役割は、プレイヤーの会話履歴を分析し、公平かつ教育的なフィードバックを提供することです。
-
-            【重要】評価の手順と採点基準
-            評価の曖昧さをなくし、常に一貫した基準でフィードバックを提供するため、以下の手順と採点基準を厳格に守ってください。
-
-            手順1: 会話の分析
-            まず、会話全体を「1. 文法・語彙」「2. TPO・敬語」「3. 会話の自然な流れ」の3つの観点から詳細に分析します。
-
-            手順2: 採点
-            次に、以下の採点基準に照らし合わせ、会話がどのレベルに該当するかを判断し、最終的な点数を決定します。
-
-            【採点基準】
-            *   **90～100点（素晴らしい）**:
-                *   文法や語彙の誤りがほとんどなく、非常に自然な日本語を使えている。
-                *   TPOや相手との関係性に合わせた敬語・丁寧語の使い分けが完璧。
-                *   会話の流れがスムーズで、目的達成までのコミュニケーションが円滑。
-
-            *   **70～89点（良い）**:
-                *   小さな文法・語彙の誤り（助詞の間違いなど）がいくつか見られるが、コミュニケーションの妨げにはなっていない。
-                *   TPOや敬語の選択に少し不自然な点があるが、大きな問題はない。
-                *   会話の目的は達成できているが、時々、応答に詰まったり、少し不自然な間があったりする。
-
-            *   **40～69点（要改善）**:
-                *   文法・語彙の誤りが多く、相手が意味を推測する必要がある場面が見られる。
-                *   TPOに合わない言葉遣いや、不適切な敬語が目立つ。
-                *   会話の流れがぎこちなく、話が噛み合わなかったり、唐突な発言で相手を困惑させたりしている。
-
-            *   **0～39点（大きな課題あり）**:
-                *   文法・語彙の誤りが非常に多く、コミュニケーションの成立が困難。
-                *   TPOを著しく無視した、あるいは無礼な言葉遣いが見られる。
-                *   会話が全く成り立っていない、または、ミッション達成のプロセスを完全に無視している。
-
-            手順3: フィードバックの作成
-            最後に、以下の形式に従って、プレイヤーへのフィードバックを出力してください。
-
-            【出力形式】
-            1.  **点数**: (採点結果を「n/100」の形式で記述)
-            2.  **総評**: (会話全体を称賛、または、励ますような、ポジティブな一言)
-            3.  **詳細フィードバック**:
-                *   **【良かった点】**: (具体的な会話の一部を引用し、文法、TPO、会話の流れの観点から良かった点を褒める)
-                *   **【改善できる点】**: (具体的な会話の一部を引用し、なぜそれが問題なのか、どうすればもっと良くなるのかを、上記の3つの観点から丁寧に説明する)
-
-            この形式で、プレイヤーに語りかける口調で出力してください。
-        '''
-        # --- Game.pyから移植した要約プロンプト ---
-        summary_prompt = '''
-            あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部である、**プレイヤーの言語的課題分析機能**を担当してもらいます。
-            あなたの役割は、以下の会話履歴を分析し、プレイヤーが日本語でのコミュニケーションにおいて抱えている「課題」を客観的に抽出することです。
-
-            【重要】分析のルール
-            *   プレイヤーの性格、気分、個性、意図などを**絶対に分析・記述してはいけません**。
-            *   抽出する情報は、**純粋に言語的・コミュニケーション戦略的な課題**に限定してください。
-            *   以下の観点に沿って、具体的な課題を簡潔な箇条書きで出力してください。
-
-            【分析の観点】
-            1.  **文法・語彙の誤り**: 助詞（は/が/を/に等）の間違い、動詞の活用ミス、不適切な単語の選択。
-            2.  **敬語・丁寧語のレベル**: 場面にそぐわない丁寧すぎる、または、くだけすぎた表現。
-            3.  **コミュニケーション戦略**: 質問への応答が不自然に短い/長い、話の展開が唐突、相手への配慮が欠けた直接的すぎる表現など。
-            4.  **会話の流れの阻害**: 文脈を無視した発言、会話の目的から逸脱した言動など。
-
-            以下の会話履歴を分析し、上記の観点から課題のみを箇条書きで出力してください。
-        '''
-        
-        conversation_log = "\n".join(st.session_state.chat_history)
-        client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-
-        # --- 評価を生成して表示・記録 ---
-        evaluation_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": evaluation_prompt},
-                {"role": "user", "content": conversation_log}
-            ],
-            temperature=0.25,
-        )
-        evaluation_result = evaluation_response.choices[0].message.content
-        st.markdown("### 会話の評価")
-        st.markdown(evaluation_result)
-        now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\n')
-        record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
-
-        # --- 行動履歴の要約を生成して記録 ---
-        summary_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": summary_prompt},
-                {"role": "user", "content": conversation_log}
-            ],
-            temperature=0.25,
-        )
-        summary_result = summary_response.choices[0].message.content
-        # この要約は画面には表示せず、裏側で記録する
-        record_message(st.session_state.username, summary_result, 'player_summary')
-
-      
-
-        # 「もう一度やる」ボタン
-        if st.button("🔁 最初からやり直す"):
-            
-            st.session_state.chat_history = []
-            st.session_state["clear_screen"] = False
-            st.session_state["show_history"] = False
-            st.session_state["home"] = False
-            st.session_state["logged_in"] = True
-            st.session_state["chat"] = True
-            st.session_state["first_session"] = True
             st.rerun()
-    
-       #st.markdown("### 💬 ")
 
-    # --- セッション中の履歴表示 ---
-    if st.session_state.chat_history and not st.session_state["clear_screen"] and not st.session_state["home"]:
+        # --- 会話履歴の表示 ---
         for msg in st.session_state.chat_history:
             if msg.startswith("ユーザー:"):
-                # ユーザー → 右寄せ（グリーン）
-                st.markdown(
-                    f"""
-                    <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
-                        <div style='
-                            background-color: #DCF8C6;
-                            padding: 8px 12px;
-                            border-radius: 8px;
-                            max-width: 80%;
-                            word-wrap: break-word;
-                            text-align: left;
-                            font-size: 16px;
-                            color:black;
-                        '>
-                            {msg.replace("ユーザー:", "")}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
+                st.markdown(f"<div style='display: flex; justify-content: flex-end; margin: 4px 0'><div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>{msg.replace("ユーザー:", "")}</div></div>", unsafe_allow_html=True)
             elif msg.startswith("AI:"):
-                # AI → 左寄せ（グレー）
-                st.markdown(
-                    f"""
-                    <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
-                        <div style='
-                            background-color: #E6E6EA;
-                            padding: 8px 12px;
-                            border-radius: 8px;
-                            max-width: 80%;
-                            word-wrap: break-word;
-                            text-align: left;
-                            font-size: 16px;
-                            color:black;
-                        '>
-                            {msg.replace("AI:", "")}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                st.markdown(f"<div style='display: flex; justify-content: flex-start; margin: 4px 0'><div style='background-color: #E6E6EA; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>{msg.replace("AI:", "")}</div></div>", unsafe_allow_html=True)
 
-
-    # --- 入力フォーム ---
-    if st.session_state["chat"] and not st.session_state.first_session:
-        
+        # --- 入力フォーム ---
         with st.form(key="chat_form", clear_on_submit=True):
             col1, col2 = st.columns([5, 1])
-            
             with col1:
                 user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
-                components.html(
-                    f"""
-                        <div>some hidden container</div>
-                        <p>{st.session_state.counter if 'counter' in st.session_state else 0}</p>
-                        <script>
-                            var input = window.parent.document.querySelectorAll("input[type=text]");
-                            for (var i = 0; i < input.length; ++i) {{
-                                input[i].focus();
-                            }}
-                    </script>
-                    """,
-                    height=0,
-                )
-                
+                components.html(f'''<div>some hidden container</div><p>{st.session_state.counter if 'counter' in st.session_state else 0}</p><script>var input = window.parent.document.querySelectorAll("input[type=text]"); for (var i = 0; i < input.length; ++i) {{ input[i].focus(); }}</script>''', height=0)
             with col2:
                 submit_button = st.form_submit_button("送信", use_container_width=True)
 
-        # --- 送信処理 ---
-        if submit_button:
-            if user_input.strip():
-                client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+        if submit_button and user_input.strip():
+            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+            system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
+            messages = [{"role": "system", "content": system_prompt}]
+            for msg in st.session_state.get("chat_history", []):
+                if msg.startswith("ユーザー:"):
+                    messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
+                elif msg.startswith("AI:"):
+                    messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
+            messages.append({"role": "user", "content": user_input})
 
-                # ✅ 過去のチャット履歴を messages に変換
-                system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
-                messages = [{"role": "system", "content": system_prompt}]
-                for msg in st.session_state.get("chat_history", []):
-                    if msg.startswith("ユーザー:"):
-                        messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
-                    elif msg.startswith("AI:"):
-                        messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
-
-                # ✅ 新しい入力を追加
-                messages.append({"role": "user", "content": user_input})
-
-                # ✅ API 呼び出し
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=messages,
-                    temperature=0.25,
-                )
-                reply = response.choices[0].message.content
-            
-                # 履歴に追加
-                st.session_state.chat_history.append(f"ユーザー: {user_input}")
-                st.session_state.chat_history.append(f"AI: {reply}")
-
-                # Google Sheetsに記録（関数が定義されている前提）
-                if st.session_state["first_session"]:
-                    now = datetime.now(JST).strftime('%Y/%m/%d %H:%M')
-                    full_message = st.session_state["style_label"] + now + f"ユーザー: {user_input}AI: {reply}"
-                    st.session_state["first_session"] = False
-                else:
-                    full_message = f"ユーザー: {user_input}\nAI: {reply}"
-                
-                record_message(st.session_state.username, full_message,"message")
-                
-                if "目標達成" in reply and not st.session_state["home"] or "ミッション達成" in reply and not st.session_state["home"]:
-                    st.session_state["clear_screen"] = True
-                    st.session_state["chat"] = False
-                    st.session_state["chat_histry"] = []
-                    st.session_state["first_session"] = True
-                    st.rerun()
-                elif "ミッション失敗" in reply and not st.session_state["home"]:
-                    st.session_state["Failed_screen"] = True
-                    st.session_state["chat"] = False
-                    st.session_state["chat_histry"] = []
-                    st.session_state["first_session"] = True
-                    st.rerun()
-                else:
-                    st.rerun()
-            else:
-                st.warning("メッセージが空です。")
-            
-            
+            response = client.chat.completions.create(model="gpt-4o", messages=messages, temperature=0.25)
+            reply = response.choices[0].message.content
         
-    elif st.session_state.show_history:
-        st.markdown("### 📜 会話履歴")
+            st.session_state.chat_history.append(f"ユーザー: {user_input}")
+            st.session_state.chat_history.append(f"AI: {reply}")
 
-        history = load_message(st.session_state.username, "message")
+            full_message = f"ユーザー: {user_input}\nAI: {reply}"
+            record_message(st.session_state.username, full_message,"message")
+            
+            if "ミッション達成" in reply:
+                st.session_state.clear_screen = True
+                st.session_state.chat = False
+            elif "ミッション失敗" in reply:
+                st.session_state.Failed_screen = True
+                st.session_state.chat = False
+            st.rerun()
 
-        if not history.strip():
-            st.info("（会話履歴はまだありません）")
-        else:
-            # 「Chapter + 日付」ごとのブロックを抽出
-            pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})(.*?)(?=Chapter \d+: |\Z)"
-            matches = re.findall(pattern, history, re.DOTALL)
-
-            if not matches:
-                st.warning("履歴の解析に失敗しました。")
-            else:
-                # タイトルだけをリスト化（選択肢）
-                options = [title.strip() for title, _ in matches]
-                selected = st.selectbox("表示する会話を選んでください", options[::-1])  # 新しい順
-
-                # 選ばれたタイトルのブロックのみ表示
-                selected_block = next(((t, c) for t, c in matches if t.strip() == selected), None)
-
-                if selected_block:
-                    title, content = selected_block
-                    st.markdown(f"#### {title.strip()}")
-
-                    lines = content.strip().split("\n")
-                    for line in lines:
-                        line = line.strip()
-                        if line.startswith("ユーザー:"):
-                            col1, col2 = st.columns([4, 6])
-                            with col2:
-                                st.markdown(
-                                    f"""
-                                    <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
-                                        <div style='
-                                            background-color: #DCF8C6;
-                                            padding: 8px 12px;
-                                            border-radius: 8px;
-                                            max-width: 80%;
-                                            word-wrap: break-word;
-                                            text-align: left;
-                                            font-size: 16px;
-                                            color:black;
-                                        '>
-                                            {line.replace("ユーザー:", "")}
-                                        </div>
-                                    </div>
-                                    """,
-                                    unsafe_allow_html=True
-                                )
-                        elif line.startswith("AI:"):
-                            col1, col2 = st.columns([6, 4])
-                            with col1:
-                                st.markdown(
-                                    f"""
-                                    <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
-                                        <div style='
-                                            background-color: #E6E6EA;
-                                            padding: 8px 12px;
-                                            border-radius: 8px;
-                                            max-width: 80%;
-                                            word-wrap: break-word;
-                                            text-align: left;
-                                            font-size: 16px;
-                                            color:black;
-                                        '>
-                                            {line.replace("AI:", "")}
-                                        </div>
-                                    </div>
-                                    """,
-                                    unsafe_allow_html=True
-                                )
-
-
-    elif st.session_state["eval"]:
-        st.title("🎩過去のフィードバック")
-
-        # メッセージ取得（load_messageは既存関数）
-        message = load_message(st.session_state["username"], "eval")
-
-        if not message:
-            st.info("フィードバックはまだ登録されていません。")
-        else:
-
-            # 「Chapter X: ○○YYYY/MM/DD hh:mm」ごとにフィードバックを抽出
-            pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})\n(.*?)(?=Chapter \d+: |\Z)"
-            matches = re.findall(pattern, message, re.DOTALL)
-
-            if not matches:
-                st.warning("フィードバックが解析できませんでした。")
-            else:
-                # セレクトボックスの選択肢用にタイトルだけ使用
-                feedback_dict = {title.strip(): body.strip() for title, body in matches}
-
-                # セレクトボックスでフィードバック選択
-                selected_title = st.selectbox("表示するフィードバックを選んでください", sorted(feedback_dict.keys(), reverse=True))
-
-                # 表示（タイトルは非表示）
-                st.markdown("### フィードバック内容")
-                selected_body = feedback_dict[selected_title]
-
-                # パラグラフごとに分けて表示（2重改行で段落分割）
-                for para in selected_body.split("\n\n"):
-                    st.markdown(para.strip())
-    
-    elif st.session_state.Failed_screen:
-        st.error("ミッション失敗...")
-        
-        # --- 詳細な評価プロンプト ---
+    elif st.session_state.clear_screen:
+        st.success("ミッション達成！おめでとうございます！")
+        # 評価・要約・再挑戦ボタンの表示
         evaluation_prompt = '''
             あなたには、私が作成する「日本語学習者支援ゲーム」の評価システムを担当してもらいます。
             あなたの役割は、プレイヤーの会話履歴を分析し、公平かつ教育的なフィードバックを提供することです。
@@ -906,7 +559,6 @@ if st.session_state.logged_in:
 
             この形式で、プレイヤーに語りかける口調で出力してください。
         '''
-        # --- 要約プロンプト ---
         summary_prompt = '''
             あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部である、**プレイヤーの言語的課題分析機能**を担当してもらいます。
             あなたの役割は、以下の会話履歴を分析し、プレイヤーが日本語でのコミュニケーションにおいて抱えている「課題」を客観的に抽出することです。
@@ -924,48 +576,148 @@ if st.session_state.logged_in:
 
             以下の会話履歴を分析し、上記の観点から課題のみを箇条書きで出力してください。
         '''
-        
         conversation_log = "\n".join(st.session_state.chat_history)
         client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-
-        # --- 評価を生成して表示・記録 ---
-        evaluation_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": evaluation_prompt},
-                {"role": "user", "content": conversation_log}
-            ],
-            temperature=0.25,
-        )
+        evaluation_response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": evaluation_prompt}, {"role": "user", "content": conversation_log}], temperature=0.25)
         evaluation_result = evaluation_response.choices[0].message.content
         st.markdown("### 会話の評価")
         st.markdown(evaluation_result)
         now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\n')
         record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
-
-        # --- 行動履歴の要約を生成して記録 ---
-        summary_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": summary_prompt},
-                {"role": "user", "content": conversation_log}
-            ],
-            temperature=0.25,
-        )
+        summary_response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": summary_prompt}, {"role": "user", "content": conversation_log}], temperature=0.25)
         summary_result = summary_response.choices[0].message.content
-        # この要約は画面には表示せず、裏側で記録する
         record_message(st.session_state.username, summary_result, 'player_summary')
-
-        # 「もう一度やる」ボタン
         if st.button("🔁 最初からやり直す"):
             st.session_state.chat_history = []
-            st.session_state["clear_screen"] = False
-            st.session_state["Failed_screen"] = False
-            st.session_state["show_history"] = False
-            st.session_state["home"] = False
-            st.session_state["logged_in"] = True
-            st.session_state["chat"] = True
-            st.session_state["first_session"] = True
+            st.session_state.clear_screen = False
+            st.session_state.chat = True
+            st.session_state.first_session = True
             st.rerun()
+
+    elif st.session_state.Failed_screen:
+        st.error("ミッション失敗...")
+        # 評価・要約・再挑戦ボタンの表示
+        evaluation_prompt = '''
+            あなたには、私が作成する「日本語学習者支援ゲーム」の評価システムを担当してもらいます。
+            あなたの役割は、プレイヤーの会話履歴を分析し、公平かつ教育的なフィードバックを提供することです。
+
+            【重要】評価の手順と採点基準
+            評価の曖昧さをなくし、常に一貫した基準でフィードバックを提供するため、以下の手順と採点基準を厳格に守ってください。
+
+            手順1: 会話の分析
+            まず、会話全体を「1. 文法・語彙」「2. TPO・敬語」「3. 会話の自然な流れ」の3つの観点から詳細に分析します。
+
+            手順2: 採点
+            次に、以下の採点基準に照らし合わせ、会話がどのレベルに該当するかを判断し、最終的な点数を決定します。
+
+            【採点基準】
+            *   **90～100点（素晴らしい）**:
+                *   文法や語彙の誤りがほとんどなく、非常に自然な日本語を使えている。
+                *   TPOや相手との関係性に合わせた敬語・丁寧語の使い分けが完璧。
+                *   会話の流れがスムーズで、目的達成までのコミュニケーションが円滑。
+
+            *   **70～89点（良い）**:
+                *   小さな文法・語彙の誤り（助詞の間違いなど）がいくつか見られるが、コミュニケーションの妨げにはなっていない。
+                *   TPOや敬語の選択に少し不自然な点があるが、大きな問題はない。
+                *   会話の目的は達成できているが、時々、応答に詰まったり、少し不自然な間があったりする。
+
+            *   **40～69点（要改善）**:
+                *   文法・語彙の誤りが多く、相手が意味を推測する必要がある場面が見られる。
+                *   TPOに合わない言葉遣いや、不適切な敬語が目立つ。
+                *   会話の流れがぎこちなく、話が噛み合わなかったり、唐突な発言で相手を困惑させたりしている。
+
+            *   **0～39点（大きな課題あり）**:
+                *   文法・語彙の誤りが非常に多く、コミュニケーションの成立が困難。
+                *   TPOを著しく無視した、あるいは無礼な言葉遣いが見られる。
+                *   会話が全く成り立っていない、または、ミッション達成のプロセスを完全に無視している。
+
+            手順3: フィードバックの作成
+            最後に、以下の形式に従って、プレイヤーへのフィードバックを出力してください。
+
+            【出力形式】
+            1.  **点数**: (採点結果を「n/100」の形式で記述)
+            2.  **総評**: (会話全体を称賛、または、励ますような、ポジティブな一言)
+            3.  **詳細フィードバック**:
+                *   **【良かった点】**: (具体的な会話の一部を引用し、文法、TPO、会話の流れの観点から良かった点を褒める)
+                *   **【改善できる点】**: (具体的な会話の一部を引用し、なぜそれが問題なのか、どうすればもっと良くなるのかを、上記の3つの観点から丁寧に説明する)
+
+            この形式で、プレイヤーに語りかける口調で出力してください。
+        '''
+        summary_prompt = '''
+            あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部である、**プレイヤーの言語的課題分析機能**を担当してもらいます。
+            あなたの役割は、以下の会話履歴を分析し、プレイヤーが日本語でのコミュニケーションにおいて抱えている「課題」を客観的に抽出することです。
+
+            【重要】分析のルール
+            *   プレイヤーの性格、気分、個性、意図などを**絶対に分析・記述してはいけません**。
+            *   抽出する情報は、**純粋に言語的・コミュニケーション戦略的な課題**に限定してください。
+            *   以下の観点に沿って、具体的な課題を簡潔な箇条書きで出力してください。
+
+            【分析の観点】
+            1.  **文法・語彙の誤り**: 助詞（は/が/を/に等）の間違い、動詞の活用ミス、不適切な単語の選択。
+            2.  **敬語・丁寧語のレベル**: 場面にそぐわない丁寧すぎる、または、くだけすぎた表現。
+            3.  **コミュニケーション戦略**: 質問への応答が不自然に短い/長い、話の展開が唐突、相手への配慮が欠けた直接的すぎる表現など。
+            4.  **会話の流れの阻害**: 文脈を無視した発言、会話の目的から逸脱した言動など。
+
+            以下の会話履歴を分析し、上記の観点から課題のみを箇条書きで出力してください。
+        '''
+        conversation_log = "\n".join(st.session_state.chat_history)
+        client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+        evaluation_response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": evaluation_prompt}, {"role": "user", "content": conversation_log}], temperature=0.25)
+        evaluation_result = evaluation_response.choices[0].message.content
+        st.markdown("### 会話の評価")
+        st.markdown(evaluation_result)
+        now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\n')
+        record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
+        summary_response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": summary_prompt}, {"role": "user", "content": conversation_log}], temperature=0.25)
+        summary_result = summary_response.choices[0].message.content
+        record_message(st.session_state.username, summary_result, 'player_summary')
+        if st.button("🔁 最初からやり直す"):
+            st.session_state.chat_history = []
+            st.session_state.Failed_screen = False
+            st.session_state.chat = True
+            st.session_state.first_session = True
+            st.rerun()
+
+    elif st.session_state.show_history:
+        st.markdown("### 📜 会話履歴")
+        history = load_message(st.session_state.username, "message")
+        if not history.strip():
+            st.info("（会話履歴はまだありません）")
+        else:
+            pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})(.*?)(?=Chapter \d+: |\Z)"
+            matches = re.findall(pattern, history, re.DOTALL)
+            if not matches:
+                st.warning("履歴の解析に失敗しました。")
+            else:
+                options = [title.strip() for title, _ in matches]
+                selected = st.selectbox("表示する会話を選んでください", options[::-1])
+                selected_block = next(((t, c) for t, c in matches if t.strip() == selected), None)
+                if selected_block:
+                    title, content = selected_block
+                    st.markdown(f"#### {title.strip()}")
+                    lines = content.strip().split("\n")
+                    for line in lines:
+                        if line.startswith("ユーザー:"):
+                            st.markdown(f"<div style='display: flex; justify-content: flex-end; margin: 4px 0'><div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>{line.replace("ユーザー:", "")}</div></div>", unsafe_allow_html=True)
+                        elif line.startswith("AI:"):
+                            st.markdown(f"<div style='display: flex; justify-content: flex-start; margin: 4px 0'><div style='background-color: #E6E6EA; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>{line.replace("AI:", "")}</div></div>", unsafe_allow_html=True)
+
+    elif st.session_state.eval:
+        st.title("🎩過去のフィードバック")
+        message = load_message(st.session_state.username, "eval")
+        if not message:
+            st.info("フィードバックはまだ登録されていません。")
+        else:
+            pattern = r"(Chapter \d+: .*?\d{4}/\d{2}/\d{2} \d{2}:\d{2})\n(.*?)(?=Chapter \d+: |\Z)"
+            matches = re.findall(pattern, message, re.DOTALL)
+            if not matches:
+                st.warning("フィードバックが解析できませんでした。")
+            else:
+                feedback_dict = {title.strip(): body.strip() for title, body in matches}
+                selected_title = st.selectbox("表示するフィードバックを選んでください", sorted(feedback_dict.keys(), reverse=True))
+                st.markdown("### フィードバック内容")
+                selected_body = feedback_dict[selected_title]
+                for para in selected_body.split("\n\n"):
+                    st.markdown(para.strip())
         
         
