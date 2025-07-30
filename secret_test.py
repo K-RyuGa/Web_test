@@ -127,6 +127,7 @@ st.session_state.setdefault("username", "")
 st.session_state.setdefault("chat_history", [])
 st.session_state.setdefault("show_history", False)
 st.session_state.setdefault("clear_screen",False)
+st.session_state.setdefault("Failed_screen",False)
 st.session_state.setdefault("home",True)
 st.session_state.setdefault("chat",False)
 st.session_state.setdefault("first_session",True)
@@ -200,7 +201,8 @@ if st.session_state.logged_in:
         '''
 
         end_prompt = '''
-            「ミッション達成」はゲームクリアの合言葉ですので、ミッションを達成していない場合、決して出力しないでください。
+            「ミッション達成」はゲームクリアの合言葉です。プレイヤーがミッションを達成した場合にのみ、この言葉を出力してください。
+            逆に、プレイヤーの言動が著しく不適切であったり、会話が完全に破綻してしまったりした場合は、「ミッション失敗」と出力してください。
             それではゲームスタートです。プレイヤーに話しかけてください。
         '''
 
@@ -735,7 +737,14 @@ if st.session_state.logged_in:
                     st.session_state["chat_histry"] = []
                     st.session_state["first_session"] = True
                     st.rerun()
-                st.rerun()
+                elif "ミッション失敗" in reply and not st.session_state["home"]:
+                    st.session_state["Failed_screen"] = True
+                    st.session_state["chat"] = False
+                    st.session_state["chat_histry"] = []
+                    st.session_state["first_session"] = True
+                    st.rerun()
+                else:
+                    st.rerun()
             else:
                 st.warning("メッセージが空です。")
             
@@ -846,3 +855,117 @@ if st.session_state.logged_in:
                 # パラグラフごとに分けて表示（2重改行で段落分割）
                 for para in selected_body.split("\n\n"):
                     st.markdown(para.strip())
+    
+    elif st.session_state.Failed_screen:
+        st.error("ミッション失敗...")
+        
+        # --- 詳細な評価プロンプト ---
+        evaluation_prompt = '''
+            あなたには、私が作成する「日本語学習者支援ゲーム」の評価システムを担当してもらいます。
+            あなたの役割は、プレイヤーの会話履歴を分析し、公平かつ教育的なフィードバックを提供することです。
+
+            【重要】評価の手順と採点基準
+            評価の曖昧さをなくし、常に一貫した基準でフィードバックを提供するため、以下の手順と採点基準を厳格に守ってください。
+
+            手順1: 会話の分析
+            まず、会話全体を「1. 文法・語彙」「2. TPO・敬語」「3. 会話の自然な流れ」の3つの観点から詳細に分析します。
+
+            手順2: 採点
+            次に、以下の採点基準に照らし合わせ、会話がどのレベルに該当するかを判断し、最終的な点数を決定します。
+
+            【採点基準】
+            *   **90～100点（素晴らしい）**:
+                *   文法や語彙の誤りがほとんどなく、非常に自然な日本語を使えている。
+                *   TPOや相手との関係性に合わせた敬語・丁寧語の使い分けが完璧。
+                *   会話の流れがスムーズで、目的達成までのコミュニケーションが円滑。
+
+            *   **70～89点（良い）**:
+                *   小さな文法・語彙の誤り（助詞の間違いなど）がいくつか見られるが、コミュニケーションの妨げにはなっていない。
+                *   TPOや敬語の選択に少し不自然な点があるが、大きな問題はない。
+                *   会話の目的は達成できているが、時々、応答に詰まったり、少し不自然な間があったりする。
+
+            *   **40～69点（要改善）**:
+                *   文法・語彙の誤りが多く、相手が意味を推測する必要がある場面が見られる。
+                *   TPOに合わない言葉遣いや、不適切な敬語が目立つ。
+                *   会話の流れがぎこちなく、話が噛み合わなかったり、唐突な発言で相手を困惑させたりしている。
+
+            *   **0～39点（大きな課題あり）**:
+                *   文法・語彙の誤りが非常に多く、コミュニケーションの成立が困難。
+                *   TPOを著しく無視した、あるいは無礼な言葉遣いが見られる。
+                *   会話が全く成り立っていない、または、ミッション達成のプロセスを完全に無視している。
+
+            手順3: フィードバックの作成
+            最後に、以下の形式に従って、プレイヤーへのフィードバックを出力してください。
+
+            【出力形式】
+            1.  **点数**: (採点結果を「n/100」の形式で記述)
+            2.  **総評**: (会話全体を称賛、または、励ますような、ポジティブな一言)
+            3.  **詳細フィードバック**:
+                *   **【良かった点】**: (具体的な会話の一部を引用し、文法、TPO、会話の流れの観点から良かった点を褒める)
+                *   **【改善できる点】**: (具体的な会話の一部を引用し、なぜそれが問題なのか、どうすればもっと良くなるのかを、上記の3つの観点から丁寧に説明する)
+
+            この形式で、プレイヤーに語りかける口調で出力してください。
+        '''
+        # --- 要約プロンプト ---
+        summary_prompt = '''
+            あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部である、**プレイヤーの言語的課題分析機能**を担当してもらいます。
+            あなたの役割は、以下の会話履歴を分析し、プレイヤーが日本語でのコミュニケーションにおいて抱えている「課題」を客観的に抽出することです。
+
+            【重要】分析のルール
+            *   プレイヤーの性格、気分、個性、意図などを**絶対に分析・記述してはいけません**。
+            *   抽出する情報は、**純粋に言語的・コミュニケーション戦略的な課題**に限定してください。
+            *   以下の観点に沿って、具体的な課題を簡潔な箇条書きで出力してください。
+
+            【分析の観点】
+            1.  **文法・語彙の誤り**: 助詞（は/が/を/に等）の間違い、動詞の活用ミス、不適切な単語の選択。
+            2.  **敬語・丁寧語のレベル**: 場面にそぐわない丁寧すぎる、または、くだけすぎた表現。
+            3.  **コミュニケーション戦略**: 質問への応答が不自然に短い/長い、話の展開が唐突、相手への配慮が欠けた直接的すぎる表現など。
+            4.  **会話の流れの阻害**: 文脈を無視した発言、会話の目的から逸脱した言動など。
+
+            以下の会話履歴を分析し、上記の観点から課題のみを箇条書きで出力してください。
+        '''
+        
+        conversation_log = "\n".join(st.session_state.chat_history)
+        client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
+        # --- 評価を生成して表示・記録 ---
+        evaluation_response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": evaluation_prompt},
+                {"role": "user", "content": conversation_log}
+            ],
+            temperature=0.25,
+        )
+        evaluation_result = evaluation_response.choices[0].message.content
+        st.markdown("### 会話の評価")
+        st.markdown(evaluation_result)
+        now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\n')
+        record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
+
+        # --- 行動履歴の要約を生成して記録 ---
+        summary_response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": summary_prompt},
+                {"role": "user", "content": conversation_log}
+            ],
+            temperature=0.25,
+        )
+        summary_result = summary_response.choices[0].message.content
+        # この要約は画面には表示せず、裏側で記録する
+        record_message(st.session_state.username, summary_result, 'player_summary')
+
+        # 「もう一度やる」ボタン
+        if st.button("🔁 最初からやり直す"):
+            st.session_state.chat_history = []
+            st.session_state["clear_screen"] = False
+            st.session_state["Failed_screen"] = False
+            st.session_state["show_history"] = False
+            st.session_state["home"] = False
+            st.session_state["logged_in"] = True
+            st.session_state["chat"] = True
+            st.session_state["first_session"] = True
+            st.rerun()
+        
+        
