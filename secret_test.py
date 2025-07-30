@@ -121,6 +121,48 @@ def make_new_prompt(username, base_prompt_text, selected_prompt_text):
     )
     return completion.choices[0].message.content
 
+# --- ヒント生成機能 ---
+def generate_hint(hint_type, user_input=None):
+    # 現在のゲーム状況をプロンプトに含める
+    game_prompt = st.session_state.get("agent_prompt", "")
+    conversation_log = "\n".join(st.session_state.chat_history)
+
+    if hint_type == "action":
+        hint_instruction = f"""
+        あなたは日本語学習の補助AIです。
+        以下のゲームの状況と会話履歴を踏まえ、プレイヤーがミッションを達成するために、次に行うべき行動の具体的な選択肢を3つ、簡単な日本語で提案してください。
+
+        【ゲームの状況】
+        {game_prompt}
+
+        【今までの会話】
+        {conversation_log}
+        """
+    elif hint_type == "word" and user_input:
+        hint_instruction = f"""
+        あなたは日本語学習の補助AIです。
+        以下のゲームの状況と会話履歴を踏まえ、プレイヤーが質問した「{user_input}」という単語について、この文脈での意味と使い方を、日本語学習者にも分かりやすく、簡潔に説明してください。
+
+        【ゲームの状況】
+        {game_prompt}
+
+        【今までの会話】
+        {conversation_log}
+        """
+    else:
+        return "ヒントを生成できませんでした。"
+
+    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "あなたは親切な日本語学習の先生です。"},
+            {"role": "user", "content": hint_instruction}
+        ],
+        temperature=0.25,
+    )
+    return response.choices[0].message.content
+
 # --- セッション管理初期化 ---
 st.session_state.setdefault("logged_in", False)
 st.session_state.setdefault("username", "")
@@ -133,6 +175,8 @@ st.session_state.setdefault("chat",False)
 st.session_state.setdefault("first_session",True)
 st.session_state.setdefault("style_label", "シチュエーション選択") # 初期値を設定
 st.session_state.setdefault("eval",False)
+st.session_state.setdefault("hint_mode", "chat") # ヒント機能のモード管理（chat, select, ask_word, show_hint）
+st.session_state.setdefault("hint_message", "") # 表示するヒントメッセージ
 
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
@@ -732,35 +776,54 @@ if st.session_state.logged_in:
 
     # --- 入力フォーム ---
     if st.session_state["chat"] and not st.session_state.first_session:
-        
-        with st.form(key="chat_form", clear_on_submit=True):
-            col1, col2 = st.columns([5, 1])
-            
+        # --- ヒントメッセージ表示 ---
+        if st.session_state.hint_mode == "show_hint":
+            st.info(st.session_state.hint_message)
+            st.session_state.hint_mode = "chat" # 表示後、通常のチャットモードに戻す
+
+        # --- ヒント選択画面 ---
+        if st.session_state.hint_mode == "select":
+            st.markdown("どのようなヒントが必要ですか？")
+            col1, col2, col3 = st.columns([1, 1, 3])
             with col1:
-                user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
-                components.html(
-                    f"""
-                        <div>some hidden container</div>
-                        <p>{st.session_state.counter if 'counter' in st.session_state else 0}</p>
-                        <script>
-                            var input = window.parent.document.querySelectorAll("input[type=text]");
-                            for (var i = 0; i < input.length; ++i) {{
-                                input[i].focus();
-                            }}
-                    </script>
-                    """,
-                    height=0,
-                )
-                
+                if st.button("言葉の意味を調べる"):
+                    st.session_state.hint_mode = "ask_word"
+                    st.rerun()
             with col2:
-                submit_button = st.form_submit_button("送信", use_container_width=True)
+                if st.button("次の行動のヒント"):
+                    hint = generate_hint("action")
+                    st.session_state.hint_message = hint
+                    st.session_state.hint_mode = "show_hint"
+                    st.rerun()
 
-        # --- 送信処理 ---
-        if submit_button:
-            if user_input.strip():
+        # --- 単語質問画面 ---
+        elif st.session_state.hint_mode == "ask_word":
+            with st.form(key="word_hint_form"):
+                word_to_ask = st.text_input("意味を調べたい言葉を入力してください")
+                submit_word = st.form_submit_button("送信")
+                if submit_word and word_to_ask:
+                    hint = generate_hint("word", word_to_ask)
+                    st.session_state.hint_message = hint
+                    st.session_state.hint_mode = "show_hint"
+                    st.rerun()
+
+        # --- 通常のチャット入力フォーム ---
+        elif st.session_state.hint_mode == "chat":
+            with st.form(key="chat_form", clear_on_submit=True):
+                col1, col2, col3 = st.columns([4, 1, 1])
+                with col1:
+                    user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
+                    components.html(f'''<div>...</div><script>...</script>''', height=0)
+                with col2:
+                    submit_button = st.form_submit_button("送信", use_container_width=True)
+                with col3:
+                    if st.form_submit_button("💡 ヒント", use_container_width=True):
+                        st.session_state.hint_mode = "select"
+                        st.rerun()
+
+            if submit_button and user_input.strip():
+                # (既存の送信処理)
                 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-
-                # ✅ 過去のチャット履歴を messages に変換
                 system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
                 messages = [{"role": "system", "content": system_prompt}]
                 for msg in st.session_state.get("chat_history", []):
@@ -768,48 +831,21 @@ if st.session_state.logged_in:
                         messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
                     elif msg.startswith("AI:"):
                         messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
-
-                # ✅ 新しい入力を追加
                 messages.append({"role": "user", "content": user_input})
-
-                # ✅ API 呼び出し
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=messages,
-                    temperature=0.25,
-                )
+                response = client.chat.completions.create(model="gpt-4o", messages=messages, temperature=0.25)
                 reply = response.choices[0].message.content
-            
-                # 履歴に追加
                 st.session_state.chat_history.append(f"ユーザー: {user_input}")
                 st.session_state.chat_history.append(f"AI: {reply}")
-
-                # Google Sheetsに記録（関数が定義されている前提）
-                if st.session_state["first_session"]:
-                    now = datetime.now(JST).strftime('%Y/%m/%d %H:%M')
-                    full_message = st.session_state["style_label"] + now + f"ユーザー: {user_input}AI: {reply}"
-                    st.session_state["first_session"] = False
-                else:
-                    full_message = f"ユーザー: {user_input}\nAI: {reply}"
-                
+                full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 record_message(st.session_state.username, full_message,"message")
                 
-                if "目標達成" in reply and not st.session_state["home"] or "ミッション達成" in reply and not st.session_state["home"]:
-                    st.session_state["clear_screen"] = True
-                    st.session_state["chat"] = False
-                    st.session_state["chat_histry"] = []
-                    st.session_state["first_session"] = True
-                    st.rerun()
-                elif "ミッション失敗" in reply and not st.session_state["home"]:
-                    st.session_state["Failed_screen"] = True
-                    st.session_state["chat"] = False
-                    st.session_state["chat_histry"] = []
-                    st.session_state["first_session"] = True
-                    st.rerun()
-                else:
-                    st.rerun()
-            else:
-                st.warning("メッセージが空です。")
+                if "ミッション達成" in reply:
+                    st.session_state.clear_screen = True
+                    st.session_state.chat = False
+                elif "ミッション失敗" in reply:
+                    st.session_state.Failed_screen = True
+                    st.session_state.chat = False
+                st.rerun()
             
             
         
