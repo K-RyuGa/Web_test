@@ -639,7 +639,7 @@ if st.session_state.logged_in:
        #st.markdown("### 💬 ")
 
     # --- セッション中の履歴表示 ---
-    if st.session_state.chat_history and not st.session_state["clear_screen"] and not st.session_state["home"] and notst.session_state["Failed_screen"]:
+    if st.session_state.chat_history and not st.session_state["clear_screen"] and not st.session_state["home"] and not st.session_state["Failed_screen"]:
         for msg in st.session_state.chat_history:
             if msg.startswith("ユーザー:"):
                 # ユーザー → 右寄せ（グリーン）
