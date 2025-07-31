@@ -120,6 +120,62 @@ def make_new_prompt(username, base_prompt_text, selected_prompt_text):
     )
     return completion.choices[0].message.content
 
+# --- Hint Generation Function ---
+def generate_hint(hint_type, user_input=None):
+    # Include current game situation in the prompt
+    game_prompt = st.session_state.get("agent_prompt", "")
+    conversation_log = "\n".join(st.session_state.chat_history)
+
+    if hint_type == "action":
+        hint_instruction = f"""
+        You are an English learning support AI.
+        Based on the following game situation and conversation history, please generate a very short hint to prompt the player for their next action.
+
+        **[Important] Rules**
+        *   The hint must be a concise suggestion for action, like "Let's try..." or "How about asking about...?"
+        *   Do not include specific lines or long explanations.
+        *   The output should be only the generated hint. No extra greetings or preambles.
+
+        **[Hint Examples]**
+        *   "Let's try introducing yourself first!"
+        *   "Let's show them your passport!"
+        *   "Let's try speaking more politely!"
+
+        **[Game Situation]**
+        {game_prompt}
+
+        **[Conversation So Far]**
+        {conversation_log}
+        """
+        system_content = "You are a kind English language teacher."
+
+    elif hint_type == "word" and user_input:
+        hint_instruction = f"""
+        You are an English dictionary.
+        Please explain the most common meaning of the word '{user_input}' that the player asked about, concisely, like a dictionary.
+        Do not include extra explanations or example sentences; only output the definition of the meaning.
+
+        **[Output Format Example]**
+        *   (Noun) The fundamental, important part of things.
+        *   (Verb) To move from one place to another.
+        """
+        system_content = "You are an English dictionary."
+
+    else:
+        return "Could not generate a hint."
+
+
+    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": system_content},
+            {"role": "user", "content": hint_instruction}
+        ],
+        temperature=0.25,
+    )
+    return response.choices[0].message.content
+
 # --- Session State Initialization ---
 st.session_state.setdefault("logged_in", False)
 st.session_state.setdefault("username", "")
@@ -131,6 +187,9 @@ st.session_state.setdefault("chat", False)
 st.session_state.setdefault("first_session", True)
 st.session_state.setdefault("style_label", "Select Situation") # Set initial value
 st.session_state.setdefault("eval", False)
+st.session_state.setdefault("hint_mode", "chat") # Hint mode management (chat, select, ask_word, show_hint)
+st.session_state.setdefault("hint_message", "") # Hint message to display
+st.session_state.setdefault("Failed_screen",False)
 
 # --- UI Before Login ---
 if not st.session_state.logged_in:
@@ -209,7 +268,7 @@ if st.session_state.logged_in:
                 As an airport staff member, guide the player through immigration procedures and ask for their passport. Also, tell them where to pick up their luggage.
 
                 Specific actions are as follows:
-                1. Ask the player to present their passport.
+                1. "Ask the player to present their passport."
                 2. Explain the immigration process.
                 3. Guide them to the baggage claim area, confirm they understand, and if so, output "Mission Accomplished".
                 '''
@@ -219,7 +278,7 @@ if st.session_state.logged_in:
                 As a cashier at a supermarket, handle the player's checkout process.
 
                 Specific actions are as follows:
-                1. Call the player over with "I can help the next person in line."
+                1. "Call the player over with \"I can help the next person in line.\""
                 2. Process the purchased items and tell them the total amount.
                 3. Answer any questions about payment methods.
                 4. Once the player completes the payment, output "Mission Accomplished".
@@ -230,7 +289,7 @@ if st.session_state.logged_in:
                 As a new friend, introduce yourself to the player and chat about each other's hobbies and plans.
 
                 Specific actions are as follows:
-                1. Introduce yourself and encourage the player to do the same.
+                1. "Introduce yourself and encourage the player to do the same."
                 2. Ask questions about the player's hobbies and interests.
                 3. Suggest a date to meet next, and if the player agrees, output "Mission Accomplished".
                 '''
@@ -240,7 +299,7 @@ if st.session_state.logged_in:
                 As a colleague at work, introduce yourself to the player and enjoy a first-time conversation at the workplace.
 
                 Specific actions are as follows:
-                1. Introduce yourself and encourage the player to do the same.
+                1. "Introduce yourself and encourage the player to do the same."
                 2. Make small talk about the job to help the player relax.
                 3. Once the player successfully introduces themselves, output "Mission Accomplished".
                 '''
@@ -250,7 +309,7 @@ if st.session_state.logged_in:
                 As a doctor at a hospital, listen to the player's symptoms and proceed with the examination.
 
                 Specific actions are as follows:
-                1. Ask the player about their symptoms and ask follow-up questions.
+                1. "Ask the player about their symptoms and ask follow-up questions."
                 2. Conduct an examination and provide an appropriate diagnosis.
                 3. Once the player successfully completes the examination, output "Mission Accomplished".
                 '''
@@ -260,7 +319,7 @@ if st.session_state.logged_in:
                 As a colleague at work, support the player in speaking up during a meeting and provide feedback.
 
                 Specific actions are as follows:
-                1. Ask for the player's opinion and give them a chance to speak.
+                1. "Ask for the player's opinion and give them a chance to speak."
                 2. Provide feedback on the player's opinion to advance the discussion.
                 3. Once the player successfully states their opinion and moves the discussion forward, output "Mission Accomplished".
                 '''
@@ -270,7 +329,7 @@ if st.session_state.logged_in:
                 As a friend, invite the player to an American festival (e.g., a 4th of July BBQ) and explain the etiquette and cultural background.
 
                 Specific actions are as follows:
-                1. Invite the player to the event and explain what it is.
+                1. "Invite the player to the event and explain what it is."
                 2. Teach them about cultural etiquette and customs.
                 3. Once the player successfully participates and enjoys the event, output "Mission Accomplished".
                 ''' 
@@ -280,7 +339,7 @@ if st.session_state.logged_in:
                 As a clerk at the DMV, support the player in submitting necessary documents and explain the procedures.
 
                 Specific actions are as follows:
-                1. Ask the player what documents they need to submit.
+                1. "Ask the player what documents they need to submit."
                 2. Explain the steps of the procedure and assist if the player is confused.
                 3. Once the player successfully completes the procedure, output "Mission Accomplished".
                 '''
@@ -290,7 +349,7 @@ if st.session_state.logged_in:
                 As a transit employee, help the player by giving appropriate instructions when their train is delayed.
 
                 Specific actions are as follows:
-                1. Explain the train delay and suggest the next course of action.
+                1. "Explain the train delay and suggest the next course of action."
                 2. Clearly answer the player's questions.
                 3. Once the player successfully finds a solution, output "Mission Accomplished".
                 '''
@@ -447,15 +506,13 @@ if st.session_state.logged_in:
             final_system_prompt = personalized_prompt + end_prompt
             st.session_state.agent_prompt = final_system_prompt
 
-            start_prompt = "In line with your role, start a natural conversation with the English learner."
             messages = [
-                {"role": "system", "content": final_system_prompt},
-                {"role": "user", "content": start_prompt}
+                {"role": "system", "content": final_system_prompt}
             ]
             response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
-                temperature=0.25,
+                temperature=0,
             )
             reply = response.choices[0].message.content
             
@@ -615,32 +672,58 @@ if st.session_state.logged_in:
                 )
 
     if st.session_state["chat"] and not st.session_state.first_session:
-        with st.form(key="chat_form", clear_on_submit=True):
-            col1, col2 = st.columns([5, 1])
-            
+        # --- ヒントメッセージがセッションにあれば表示し、その後クリアする ---
+        if st.session_state.get("hint_message"):
+            st.info(st.session_state.hint_message)
+            st.session_state.hint_message = ""
+
+        # --- ヒント選択画面 ---
+        if st.session_state.hint_mode == "select":
+            st.markdown("What kind of hint do you need?")
+            col1, col2 = st.columns(2)
             with col1:
-                user_input = st.text_input("Enter your message", key="input_msg", label_visibility="collapsed")
-                components.html(
-                    f'''
-                        <div>some hidden container</div>
-                        <p>{st.session_state.counter if 'counter' in st.session_state else 0}</p>
-                        <script>
-                            var input = window.parent.document.querySelectorAll("input[type=text]");
-                            for (var i = 0; i < input.length; ++i) {{
-                                input[i].focus();
-                            }}
-                    </script>
-                    ''',
-                    height=0,
-                )
-                
+                if st.button("Look up word meaning", use_container_width=True):
+                    st.session_state.hint_mode = "ask_word"
+                    st.rerun()
             with col2:
-                submit_button = st.form_submit_button("Send", use_container_width=True)
+                if st.button("Hint for next action", use_container_width=True):
+                    hint = generate_hint("action")
+                    st.session_state.hint_message = hint
+                    st.session_state.hint_mode = "chat" # ヒント生成後はチャットモードに戻す
+                    st.rerun()
 
-        if submit_button:
-            if user_input.strip():
+        # --- 単語質問画面 ---
+        elif st.session_state.hint_mode == "ask_word":
+            with st.form(key="word_hint_form", clear_on_submit=True):
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    word_to_ask = st.text_input("Enter the word you want to look up", label_visibility="collapsed", placeholder="Enter the word you want to look up")
+                with col2:
+                    submit_word = st.form_submit_button("Submit", use_container_width=True)
+
+            if submit_word and word_to_ask:
+                hint = generate_hint("word", word_to_ask)
+                st.session_state.hint_message = hint
+                st.session_state.hint_mode = "chat"  # ヒント生成後はチャットモードに戻す
+                st.rerun()
+
+        # --- 通常のチャット入力フォーム ---
+        elif st.session_state.hint_mode == "chat":
+            with st.form(key="chat_form", clear_on_submit=True):
+                col1, col2, col3 = st.columns([4, 1, 1])
+                with col1:
+                    user_input = st.text_input("Enter your message", key="input_msg", label_visibility="collapsed")
+                    components.html(f'''<div>...</div><script>...</script>''', height=0)
+                with col2:
+                    submit_button = st.form_submit_button("Send", use_container_width=True)
+                with col3:
+                    if st.form_submit_button("💡 Hint", use_container_width=True):
+                        st.session_state.hint_mode = "select"
+                        st.rerun()
+
+            if submit_button and user_input.strip():
+                # (既存の送信処理)
                 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-
                 system_prompt = st.session_state.get("agent_prompt", "You are a kind English learning teacher.")
                 messages = [{"role": "system", "content": system_prompt}]
                 for msg in st.session_state.get("chat_history", []):
@@ -648,37 +731,21 @@ if st.session_state.logged_in:
                         messages.append({"role": "user", "content": msg.replace("User:", "").strip()})
                     elif msg.startswith("AI:"):
                         messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
-
                 messages.append({"role": "user", "content": user_input})
-
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=messages,
-                    temperature=0.25,
-                )
+                response = client.chat.completions.create(model="gpt-4o", messages=messages, temperature=0.25)
                 reply = response.choices[0].message.content
-            
                 st.session_state.chat_history.append(f"User: {user_input}")
                 st.session_state.chat_history.append(f"AI: {reply}")
-
-                if st.session_state["first_session"]:
-                    now = datetime.now(UTC).strftime('%Y/%m/%d %H:%M')
-                    full_message = st.session_state["style_label"] + now + f"User: {user_input}AI: {reply}"
-                    st.session_state["first_session"] = False
-                else:
-                    full_message = f"User: {user_input}\nAI: {reply}"
+                full_message = f"User: {user_input}\nAI: {reply}"
+                record_message(st.session_state.username, full_message,"message")
                 
-                record_message(st.session_state.username, full_message, "message")
-                
-                if "Mission Accomplished" in reply and not st.session_state["home"]:
-                    st.session_state["clear_screen"] = True
-                    st.session_state["chat"] = False
-                    st.session_state["chat_histry"] = []
-                    st.session_state["first_session"] = True
-                    st.rerun()
+                if "Mission Accomplished" in reply:
+                    st.session_state.clear_screen = True
+                    st.session_state.chat = False
+                elif "Mission Failed" in reply:
+                    st.session_state.Failed_screen = True
+                    st.session_state.chat = False
                 st.rerun()
-            else:
-                st.warning("Message is empty.")
             
     elif st.session_state.show_history:
         st.markdown("### 📜 Chat History")
