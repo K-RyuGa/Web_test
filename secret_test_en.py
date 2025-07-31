@@ -128,41 +128,41 @@ def generate_hint(hint_type, user_input=None):
 
     if hint_type == "action":
         hint_instruction = f"""
-        You are an English learning support AI.
-        Based on the following game situation and conversation history, please generate a very short hint to prompt the player for their next action.
+        あなたは日本語学習支援AIです。
+        以下のゲーム状況と会話履歴に基づき、プレイヤーの次の行動を促すための非常に短いヒントを生成してください。
 
-        **[Important] Rules**
-        *   The hint must be a concise suggestion for action, like "Let's try..." or "How about asking about...?"
-        *   Do not include specific lines or long explanations.
-        *   The output should be only the generated hint. No extra greetings or preambles.
+        **[重要] ルール**
+        *   ヒントは「〜してみましょう」や「〜について尋ねてみてはどうですか？」のような、行動を促す簡潔な提案である必要があります。
+        *   具体的なセリフや長い説明を含めないでください。
+        *   出力は生成されたヒントのみにしてください。余計な挨拶や前置きは含めないでください。
 
-        **[Hint Examples]**
-        *   "Let's try introducing yourself first!"
-        *   "Let's show them your passport!"
-        *   "Let's try speaking more politely!"
+        **[ヒントの例]**
+        *   「まずは自己紹介をしてみましょう！」
+        *   「パスポートを見せてみましょう！」
+        *   「もっと丁寧に話してみましょう！」
 
-        **[Game Situation]**
+        **[ゲーム状況]**
         {game_prompt}
 
-        **[Conversation So Far]**
+        **[これまでの会話]**
         {conversation_log}
         """
-        system_content = "You are a kind English language teacher."
+        system_content = "あなたは親切な日本語教師です。"
 
     elif hint_type == "word" and user_input:
         hint_instruction = f"""
-        You are an English dictionary.
-        Please explain the most common meaning of the word '{user_input}' that the player asked about, concisely, like a dictionary.
-        Do not include extra explanations or example sentences; only output the definition of the meaning.
+        あなたは日本語辞書です。
+        プレイヤーが尋ねた単語「{user_input}」の最も一般的な意味を、辞書のように簡潔に説明してください。
+        余計な説明や例文を含めず、意味の定義のみを出力してください。
 
-        **[Output Format Example]**
-        *   (Noun) The fundamental, important part of things.
-        *   (Verb) To move from one place to another.
+        **[出力形式の例]**
+        *   (名詞) 物事の根本となる、重要な部分。
+        *   (動詞) ある場所から別の場所へ移動すること。
         """
-        system_content = "You are an English dictionary."
+        system_content = "あなたは日本語辞書です。"
 
     else:
-        return "Could not generate a hint."
+        return "ヒントを生成できませんでした。"
 
 
     client = OpenAI(api_key=st.secrets["openai"]["api_key"])
@@ -530,67 +530,80 @@ if st.session_state.logged_in:
         st.success("Mission Accomplished! Congratulations!")
         
         evaluation_prompt = '''
-            You are in charge of the evaluation system for an "English Language Learning Support Game" I am creating.
-            Your role is to analyze the player's conversation history and provide fair and educational feedback.
+            You are an evaluation system for a Japanese language learning game I am creating.
+            Your role is to analyze the player's conversation history and provide evaluation and feedback from the following three perspectives.
 
-            【IMPORTANT】Evaluation Procedure and Scoring Criteria
-            To eliminate ambiguity in evaluation and always provide feedback based on a consistent standard, please strictly adhere to the following procedure and scoring criteria.
+            **[Important] Evaluation Procedure**
+            1.  First, analyze the entire conversation in detail from the three perspectives: "1. Grammar & Vocabulary," "2. TPO & Politeness," and "3. Natural Flow of Conversation."
+            2.  Next, score each perspective on a 100-point scale based on the scoring criteria.
+            3.  Finally, generate feedback for the player according to the [Output Format] below.
 
-            Step 1: Conversation Analysis
-            First, analyze the entire conversation in detail from the following three perspectives: "1. Grammar & Vocabulary," "2. TPO & Politeness," and "3. Natural Flow of Conversation."
+            **[Scoring Criteria by Perspective]**
 
-            Step 2: Scoring
-            Next, based on the following scoring criteria, determine which level the conversation falls into and decide on a final score.
+            **1. Grammar & Vocabulary**
+            *   90-100 points: Almost no errors in grammar or vocabulary; very natural and appropriate.
+            *   70-89 points: Minor errors (e.g., particles), but the intent is clearly conveyed.
+            *   40-69 points: Many errors, requiring the other person to guess the meaning at times.
+            *   0-39 points: So many errors that communication is difficult.
 
-            【Scoring Criteria】
-            *   **90-100 points (Excellent)**:
-                *   Almost no errors in grammar or vocabulary; uses very natural English.
-                *   Perfect use of politeness levels appropriate for the TPO and relationship with the other person.
-                *   The conversation flows smoothly, and communication to achieve the objective is seamless.
+            **2. TPO & Politeness**
+            *   90-100 points: Perfect use of language appropriate for the TPO (Time, Place, Occasion) and the relationship with the other person.
+            *   70-89 points: Slightly unnatural choices in politeness, but no major issues.
+            *   40-69 points: Noticeable use of language inappropriate for the TPO or improper politeness.
+            *   0-39 points: Language that significantly ignores TPO or is rude.
 
-            *   **70-89 points (Good)**:
-                *   Some minor grammar/vocabulary errors (e.g., article mistakes), but they do not hinder communication.
-                *   Slightly unnatural choices in TPO or politeness, but no major issues.
-                *   The conversation's objective is met, but there are occasional hesitations or slightly unnatural pauses.
+            **3. Natural Flow of Conversation**
+            *   90-100 points: The conversation flows smoothly, and the interaction to achieve the goal is seamless.
+            *   70-89 points: The goal is achieved, but there are occasional stumbles or unnatural pauses in responses.
+            *   40-69 points: The conversation is awkward, and there are times when the dialogue doesn't connect.
+            *   0-39 points: The conversation is not established at all or deviates significantly from the objective.
 
-            *   **40-69 points (Needs Improvement)**:
-                *   Many errors in grammar and vocabulary, requiring the other person to guess the meaning at times.
-                *   Noticeable use of language inappropriate for the TPO or impolite expressions.
-                *   The conversation flow is awkward, with misunderstandings or abrupt statements that confuse the other person.
+            **[Output Format]**
+            Please strictly adhere to the following Markdown format and output the score and feedback for each perspective.
 
-            *   **0-39 points (Major Issues)**:
-                *   So many errors in grammar and vocabulary that communication is difficult.
-                *   Language that grossly disregards TPO or is rude.
-                *   The conversation does not make sense at all, or completely ignores the process of achieving the mission.
+            **[Overall Evaluation]**
+            (A positive, encouraging comment about the entire conversation)
 
-            Step 3: Creating Feedback
-            Finally, output the feedback to the player in the following format.
+            ---
 
-            【Output Format】
-            1.  **Score**: (Describe the score in "n/100" format)
-            2.  **Overall Comment**: (A positive word of praise or encouragement for the entire conversation)
-            3.  **Detailed Feedback**:
-                *   **【Good Points】**: (Quote specific parts of the conversation and praise them from the perspectives of grammar, TPO, and conversational flow)
-                *   **【Areas for Improvement】**: (Quote specific parts of the conversation, explain why it's a problem, and how it could be improved from the three perspectives above)
+            ### 1. Grammar & Vocabulary
+            **Score:** XX/100
+            **Feedback:**
+            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
+            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
 
-            Please output in a tone as if you are speaking directly to the player.
+            ---
+
+            ### 2. TPO & Politeness
+            **Score:** XX/100
+            **Feedback:**
+            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
+            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
+
+            ---
+
+            ### 3. Natural Flow of Conversation
+            **Score:** XX/100
+            **Feedback:**
+            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
+            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
         '''
         summary_prompt = '''
-            You are responsible for the **Player's Linguistic Challenge Analysis feature** of an "English Language Learning Support Game" I am creating.
-            Your role is to analyze the following conversation history and objectively extract the "challenges" the player faces in English communication.
+            あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部である、**プレイヤーの言語的課題分析機能**を担当してもらいます。
+            あなたの役割は、以下の会話履歴を分析し、プレイヤーが日本語でのコミュニケーションにおいて抱えている「課題」を客観的に抽出することです。
 
-            【IMPORTANT】Analysis Rules
-            *   **NEVER analyze or describe** the player's personality, mood, individuality, or intentions.
-            *   The information to be extracted must be limited to **purely linguistic and communication strategy challenges**.
-            *   Please output the specific challenges as a concise bulleted list based on the following perspectives.
+            【重要】分析のルール
+            *   プレイヤーの性格、気分、個性、意図などを**絶対に分析・記述してはいけません**。
+            *   抽出する情報は、**純粋に言語的・コミュニケーション戦略的な課題**に限定してください。
+            *   以下の観点に沿って、具体的な課題を簡潔な箇条書きで出力してください。
 
-            【Analysis Perspectives】
-            1.  **Grammar & Vocabulary Errors**: Mistakes with articles (a/an/the), verb conjugations, inappropriate word choices.
-            2.  **Politeness Level**: Expressions that are too formal or too casual for the situation.
-            3.  **Communication Strategy**: Unnaturally short/long responses to questions, abrupt topic changes, overly direct expressions lacking consideration for the other person.
-            4.  **Conversation Flow Disruption**: Remarks that ignore the context, actions that deviate from the conversation's purpose.
+            【分析の観点】
+            1.  **文法・語彙の誤り**: 助詞（は/が/を/に等）の間違い、動詞の活用ミス、不適切な単語の選択。
+            2.  **敬語・丁寧語のレベル**: 場面にそぐわない丁寧すぎる、または、くだけすぎた表現。
+            3.  **コミュニケーション戦略**: 質問への応答が不自然に短い/長い、話の展開が唐突、相手への配慮が欠けた直接的すぎる表現など。
+            4.  **会話の流れの阻害**: 文脈を無視した発言、会話の目的から逸脱した言動など。
 
-            Analyze the following conversation history and output only the challenges as a bulleted list from the perspectives above.
+            以下の会話履歴を分析し、上記の観点から課題のみを箇条書きで出力してください。
         '''
         
         conversation_log = "\n".join(st.session_state.chat_history)
