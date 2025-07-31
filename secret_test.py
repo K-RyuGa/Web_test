@@ -193,7 +193,6 @@ st.session_state.setdefault("style_label", "シチュエーション選択") # �
 st.session_state.setdefault("eval",False)
 st.session_state.setdefault("hint_mode", "chat") # ヒント機能のモード管理（chat, select, ask_word, show_hint）
 st.session_state.setdefault("hint_message", "") # 表示するヒントメッセージ
-st.session_state.setdefault("input_msg", "") # 入力フィールドの値を保持
 
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
@@ -781,7 +780,7 @@ if st.session_state.logged_in:
             with st.form(key="chat_form", clear_on_submit=True):
                 col1, col2, col3 = st.columns([4, 1, 1])
                 with col1:
-                    user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed", value=st.session_state.get("input_msg", ""))
+                    user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
                     components.html(f'''<div>...</div><script>...</script>''', height=0)
                 with col2:
                     submit_button = st.form_submit_button("送信", use_container_width=True)
@@ -805,7 +804,6 @@ if st.session_state.logged_in:
                 reply = response.choices[0].message.content
                 st.session_state.chat_history.append(f"ユーザー: {user_input}")
                 st.session_state.chat_history.append(f"AI: {reply}")
-                st.session_state.input_msg = "" # 入力フィールドをクリア
                 full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 record_message(st.session_state.username, full_message,"message")
                 
