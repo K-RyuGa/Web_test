@@ -282,7 +282,7 @@ if st.session_state.logged_in:
                 あなたは空港の係員です。到着したばかりのプレイヤーに、入国手続きの案内をしてください。
 
                 [最初の行動]
-                こんにちは。日本へようこそ。入国手続きのご案内をしますので、パスポートをご提示いただけますか？」話しかけてください。
+                [こんにちは。日本へようこそ。入国手続きのご案内をしますので、パスポートをご提示いただけますか？」と話しかけてください。
                 '''
             ],
             [ # Chapter 2
@@ -300,7 +300,7 @@ if st.session_state.logged_in:
                 あなたはプレイヤーの新しい友人です。お互いのことをもっと知るために、趣味や週末の予定について話してください。
 
                 [最初の行動]
-                来てくれてありがとう！このカフェ、雰囲気が良くて好きなんだ。週末はいつも何をして過ごしているの？と話しかけてください。
+                「来てくれてありがとう！このカフェ、雰囲気が良くて好きなんだ。週末はいつも何をして過ごしているの？」と話しかけてください。
                 '''
             ],
             [ # Chapter 4
@@ -541,16 +541,14 @@ if st.session_state.logged_in:
             st.session_state.agent_prompt = final_system_prompt #役割を記憶させる
             # --- ★動的プロンプト生成ここまで --- #
 
-            # AIに自然な会話開始を促すためのプロンプト
-            start_prompt = "あなたの役割に沿って、日本語学習者である相手に自然な形で話しかけ、会話を始めてください。"
+            # AIが最初の発言をする
             messages = [
-                {"role": "system", "content": final_system_prompt},
-                {"role": "user", "content": start_prompt}
+                {"role": "system", "content": final_system_prompt}
             ]
             response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
-                temperature=0.25,
+                temperature=0, # 最初の発言は固定なので、ランダム性をなくす
             )
             reply = response.choices[0].message.content
             
