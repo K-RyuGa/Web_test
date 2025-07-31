@@ -193,6 +193,7 @@ st.session_state.setdefault("style_label", "シチュエーション選択") # �
 st.session_state.setdefault("eval",False)
 st.session_state.setdefault("hint_mode", "chat") # ヒント機能のモード管理（chat, select, ask_word, show_hint）
 st.session_state.setdefault("hint_message", "") # 表示するヒントメッセージ
+st.session_state.setdefault("input_msg", "") # 入力フィールドの値を保持
 
 # --- ログイン前のUI ---
 if not st.session_state.logged_in:
