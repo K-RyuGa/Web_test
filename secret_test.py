@@ -129,41 +129,42 @@ def generate_hint(hint_type, user_input=None):
 
     if hint_type == "action":
         hint_instruction = f"""
-        あなたは日本語学習の補助AIです。
-        以下のゲームの状況と会話履歴を踏まえ、プレイヤーが次に行うべき行動を促す、非常に短いヒントを**一言だけ**生成してください。
+        You are a Japanese learning support AI.
+        Based on the following game situation and conversation history, please generate a very short hint to prompt the player for their next action.
 
-        【重要】ルール
-        *   ヒントは必ず「～してみよう！」「～について聞いてみては？」のような、簡潔な行動提案の形にしてください。
-        *   具体的なセリフや長い説明は絶対に含めないでください。
-        *   出力は、生成したヒントの一言だけにしてください。余計な挨拶や前置きは不要です。
+        **[Important] Rules**
+        *   The hint must be a concise suggestion for action, like "Let's try..." or "How about asking about...?"
+        *   Do not include specific lines or long explanations.
+        *   The output should be only the generated hint. No extra greetings or preambles.
 
-        【ヒントの例】
-        *   「まずは自己紹介をしてみよう！」
-        *   「パスポートを見せてみよう！」
-        *   「もっと丁寧に話してみよう！」
+        **[Hint Examples]**
+        *   "Let's try introducing yourself first!"
+        *   "Let's show them your passport!"
+        *   "Let's try speaking more politely!"
 
-        【ゲームの状況】
+        **[Game Situation]**
         {game_prompt}
 
-        【今までの会話】
+        **[Conversation So Far]**
         {conversation_log}
         """
-        system_content = "あなたは親切な日本語学習の先生です。"
+        system_content = "You are a kind Japanese language teacher."
 
     elif hint_type == "word" and user_input:
         hint_instruction = f"""
-        あなたは日本語の辞書です。
-        プレイヤーが質問した「{user_input}」という単語の最も一般的な意味を、簡潔に、辞書のように説明してください。
-        余計な解説や例文は含めず、意味の定義だけを出力してください。
+        You are a Japanese dictionary.
+        Please explain the most common meaning of the word ''{user_input}'' that the player asked about, concisely, like a dictionary.
+        Do not include extra explanations or example sentences; only output the definition of the meaning.
 
-        【出力形式の例】
-        ・（名詞）物事の根本となる、大切な部分。
-        ・（動詞）ある場所から他の場所へ動くこと。
+        **[Output Format Example]**
+        *   (Noun) The fundamental, important part of things.
+        *   (Verb) To move from one place to another.
         """
-        system_content = "あなたは日本語の辞書です。"
+        system_content = "You are a Japanese dictionary."
 
     else:
-        return "ヒントを生成できませんでした。"
+        return "Could not generate a hint."
+
 
     client = OpenAI(api_key=st.secrets["openai"]["api_key"])
     response = client.chat.completions.create(
@@ -566,63 +567,63 @@ if st.session_state.logged_in:
         
         # --- Game.pyから移植した詳細な評価プロンプト ---
         evaluation_prompt = '''
-            あなたには、私が作成する「日本語学習者支援ゲーム」の評価システムを担当してもらいます。
-            あなたの役割は、プレイヤーの会話履歴を分析し、以下の3つの観点から、それぞれ個別に評価とフィードバックを提供することです。
+            You are an evaluation system for a Japanese language learning game I am creating.
+            Your role is to analyze the player's conversation history and provide evaluation and feedback from the following three perspectives.
 
-            【重要】評価の手順
-            1.  まず、会話全体を「1. 文法・語彙」「2. TPO・敬語」「3. 会話の自然な流れ」の3つの観点から詳細に分析します。
-            2.  次に、観点ごとに採点基準に照らし合わせて100点満点で採点します。
-            3.  最後に、下記の【出力形式】に従って、プレイヤーへのフィードバックを生成してください。
+            **[Important] Evaluation Procedure**
+            1.  First, analyze the entire conversation in detail from the three perspectives: "1. Grammar & Vocabulary," "2. TPO & Politeness," and "3. Natural Flow of Conversation."
+            2.  Next, score each perspective on a 100-point scale based on the scoring criteria.
+            3.  Finally, generate feedback for the player according to the [Output Format] below.
 
-            【観点別の採点基準】
+            **[Scoring Criteria by Perspective]**
 
-            **1. 文法・語彙 (Grammar & Vocabulary)**
-            *   90-100点: 文法や語彙の誤りがほとんどなく、非常に自然で適切。
-            *   70-89点: 小さな誤り（助詞など）はあるが、意図は明確に伝わる。
-            *   40-69点: 誤りが多く、相手が意味を推測する必要がある場面がある。
-            *   0-39点: 誤りが非常に多く、コミュニケーションの成立が困難。
+            **1. Grammar & Vocabulary**
+            *   90-100 points: Almost no errors in grammar or vocabulary; very natural and appropriate.
+            *   70-89 points: Minor errors (e.g., particles), but the intent is clearly conveyed.
+            *   40-69 points: Many errors, requiring the other person to guess the meaning at times.
+            *   0-39 points: So many errors that communication is difficult.
 
-            **2. TPO・敬語 (TPO & Politeness)**
-            *   90-100点: TPOや相手との関係性に合わせた言葉遣いが完璧。
-            *   70-89点: 敬語や丁寧語の選択に少し不自然さがあるが、大きな問題はない。
-            *   40-69点: TPOに合わない言葉遣いや不適切な敬語が目立つ。
-            *   0-39点: TPOを著しく無視した、あるいは無礼な言葉遣いが見られる。
+            **2. TPO & Politeness**
+            *   90-100 points: Perfect use of language appropriate for the TPO (Time, Place, Occasion) and the relationship with the other person.
+            *   70-89 points: Slightly unnatural choices in politeness, but no major issues.
+            *   40-69 points: Noticeable use of language inappropriate for the TPO or improper politeness.
+            *   0-39 points: Language that significantly ignores TPO or is rude.
 
-            **3. 会話の自然な流れ (Natural Flow of Conversation)**
-            *   90-100点: 会話の流れがスムーズで、目的達成までのやり取りが円滑。
-            *   70-89点: 目的は達成できているが、時々応答に詰まったり、不自然な間があったりする。
-            *   40-69点: 会話がぎこちなく、話が噛み合わない場面がある。
-            *   0-39点: 会話が全く成り立っていない、または目的から大きく逸脱している。
+            **3. Natural Flow of Conversation**
+            *   90-100 points: The conversation flows smoothly, and the interaction to achieve the goal is seamless.
+            *   70-89 points: The goal is achieved, but there are occasional stumbles or unnatural pauses in responses.
+            *   40-69 points: The conversation is awkward, and there are times when the dialogue doesn't connect.
+            *   0-39 points: The conversation is not established at all or deviates significantly from the objective.
 
-            【出力形式】
-            以下のMarkdown形式を厳守し、観点ごとに点数とフィードバックを出力してください。
+            **[Output Format]**
+            Please strictly adhere to the following Markdown format and output the score and feedback for each perspective.
 
-            【総合評価】
-            （会話全体を励ますような、ポジティブな一言）
-
-            ---
-
-            ### 1. 文法・語彙
-            **点数:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （具体的な会話を引用し、どこが良かったかを簡潔に説明）
-            *   **改善できる点:** （具体的な会話を引用し、どうすれば良くなるかを簡潔に説明）
+            **[Overall Evaluation]**
+            (A positive, encouraging comment about the entire conversation)
 
             ---
 
-            ### 2. TPO・敬語
-            **点数:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （具体的な会話を引用し、どこが良かったかを簡潔に説明）
-            *   **改善できる点:** （具体的な会話を引用し、どうすれば良くなるかを簡潔に説明）
+            ### 1. Grammar & Vocabulary
+            **Score:** XX/100
+            **Feedback:**
+            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
+            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
 
             ---
 
-            ### 3. 会話の自然な流れ
-            **点数:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （具体的な会話を引用し、どこが良かったかを簡潔に説明）
-            *   **改善できる点:** （具体的な会話を引用し、どうすれば良くなるかを簡潔に説明）
+            ### 2. TPO & Politeness
+            **Score:** XX/100
+            **Feedback:**
+            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
+            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
+
+            ---
+
+            ### 3. Natural Flow of Conversation
+            **Score:** XX/100
+            **Feedback:**
+            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
+            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
         '''
         # --- Game.pyから移植した要約プロンプト ---
         summary_prompt = '''
@@ -928,63 +929,63 @@ if st.session_state.logged_in:
         
         # --- 詳細な評価プロンプト ---
         evaluation_prompt = '''
-            あなたには、私が作成する「日本語学習者支援ゲーム」の評価システムを担当してもらいます。
-            あなたの役割は、プレイヤーの会話履歴を分析し、以下の3つの観点から、それぞれ個別に評価とフィードバックを提供することです。
+            You are an evaluation system for a Japanese language learning game I am creating.
+            Your role is to analyze the player's conversation history and provide evaluation and feedback from the following three perspectives.
 
-            【重要】評価の手順
-            1.  まず、会話全体を「1. 文法・語彙」「2. TPO・敬語」「3. 会話の自然な流れ」の3つの観点から詳細に分析します。
-            2.  次に、観点ごとに採点基準に照らし合わせて100点満点で採点します。
-            3.  最後に、下記の【出力形式】に従って、プレイヤーへのフィードバックを生成してください。
+            **[Important] Evaluation Procedure**
+            1.  First, analyze the entire conversation in detail from the three perspectives: "1. Grammar & Vocabulary," "2. TPO & Politeness," and "3. Natural Flow of Conversation."
+            2.  Next, score each perspective on a 100-point scale based on the scoring criteria.
+            3.  Finally, generate feedback for the player according to the [Output Format] below.
 
-            【観点別の採点基準】
+            **[Scoring Criteria by Perspective]**
 
-            **1. 文法・語彙 (Grammar & Vocabulary)**
-            *   90-100点: 文法や語彙の誤りがほとんどなく、非常に自然で適切。
-            *   70-89点: 小さな誤り（助詞など）はあるが、意図は明確に伝わる。
-            *   40-69点: 誤りが多く、相手が意味を推測する必要がある場面がある。
-            *   0-39点: 誤りが非常に多く、コミュニケーションの成立が困難。
+            **1. Grammar & Vocabulary**
+            *   90-100 points: Almost no errors in grammar or vocabulary; very natural and appropriate.
+            *   70-89 points: Minor errors (e.g., particles), but the intent is clearly conveyed.
+            *   40-69 points: Many errors, requiring the other person to guess the meaning at times.
+            *   0-39 points: So many errors that communication is difficult.
 
-            **2. TPO・敬語 (TPO & Politeness)**
-            *   90-100点: TPOや相手との関係性に合わせた言葉遣いが完璧。
-            *   70-89点: 敬語や丁寧語の選択に少し不自然さがあるが、大きな問題はない。
-            *   40-69点: TPOに合わない言葉遣いや不適切な敬語が目立つ。
-            *   0-39点: TPOを著しく無視した、あるいは無礼な言葉遣いが見られる。
+            **2. TPO & Politeness**
+            *   90-100 points: Perfect use of language appropriate for the TPO (Time, Place, Occasion) and the relationship with the other person.
+            *   70-89 points: Slightly unnatural choices in politeness, but no major issues.
+            *   40-69 points: Noticeable use of language inappropriate for the TPO or improper politeness.
+            *   0-39 points: Language that significantly ignores TPO or is rude.
 
-            **3. 会話の自然な流れ (Natural Flow of Conversation)**
-            *   90-100点: 会話の流れがスムーズで、目的達成までのやり取りが円滑。
-            *   70-89点: 目的は達成できているが、時々応答に詰まったり、不自然な間があったりする。
-            *   40-69点: 会話がぎこちなく、話が噛み合わない場面がある。
-            *   0-39点: 会話が全く成り立っていない、または目的から大きく逸脱している。
+            **3. Natural Flow of Conversation**
+            *   90-100 points: The conversation flows smoothly, and the interaction to achieve the goal is seamless.
+            *   70-89 points: The goal is achieved, but there are occasional stumbles or unnatural pauses in responses.
+            *   40-69 points: The conversation is awkward, and there are times when the dialogue doesn't connect.
+            *   0-39 points: The conversation is not established at all or deviates significantly from the objective.
 
-            【出力形式】
-            以下のMarkdown形式を厳守し、観点ごとに点数とフィードバックを出力してください。
+            **[Output Format]**
+            Please strictly adhere to the following Markdown format and output the score and feedback for each perspective.
 
-            【総合評価】
-            （会話全体を励ますような、ポジティブな一言）
-
-            ---
-
-            ### 1. 文法・語彙
-            **点数:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （具体的な会話を引用し、どこが良かったかを簡潔に説明）
-            *   **改善できる点:** （具体的な会話を引用し、どうすれば良くなるかを簡潔に説明）
+            **[Overall Evaluation]**
+            (A positive, encouraging comment about the entire conversation)
 
             ---
 
-            ### 2. TPO・敬語
-            **点数:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （具体的な会話を引用し、どこが良かったかを簡潔に説明）
-            *   **改善できる点:** （具体的な会話を引用し、どうすれば良くなるかを簡潔に説明）
+            ### 1. Grammar & Vocabulary
+            **Score:** XX/100
+            **Feedback:**
+            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
+            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
 
             ---
 
-            ### 3. 会話の自然な流れ
-            **点数:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （具体的な会話を引用し、どこが良かったかを簡潔に説明）
-            *   **改善できる点:** （具体的な会話を引用し、どうすれば良くなるかを簡潔に説明）
+            ### 2. TPO & Politeness
+            **Score:** XX/100
+            **Feedback:**
+            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
+            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
+
+            ---
+
+            ### 3. Natural Flow of Conversation
+            **Score:** XX/100
+            **Feedback:**
+            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
+            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
         '''
         # --- 要約プロンプト ---
         summary_prompt = '''
