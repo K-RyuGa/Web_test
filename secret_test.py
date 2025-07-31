@@ -733,10 +733,10 @@ if st.session_state.logged_in:
 
     # --- 入力フォーム ---
     if st.session_state["chat"] and not st.session_state.first_session:
-        # --- ヒントメッセージ表示 ---
-        if st.session_state.hint_mode == "show_hint":
+        # --- ヒントメッセージがセッションにあれば表示し、その後クリアする ---
+        if st.session_state.get("hint_message"):
             st.info(st.session_state.hint_message)
-            st.session_state.hint_mode = "chat" # 表示後、通常のチャットモードに戻す
+            st.session_state.hint_message = ""
 
         # --- ヒント選択画面 ---
         if st.session_state.hint_mode == "select":
@@ -750,7 +750,7 @@ if st.session_state.logged_in:
                 if st.button("次の行動のヒント", use_container_width=True):
                     hint = generate_hint("action")
                     st.session_state.hint_message = hint
-                    st.session_state.hint_mode = "show_hint"
+                    st.session_state.hint_mode = "chat" # ヒント生成後はチャットモードに戻す
                     st.rerun()
 
         # --- 単語質問画面 ---
@@ -761,7 +761,7 @@ if st.session_state.logged_in:
                 if submit_word and word_to_ask:
                     hint = generate_hint("word", word_to_ask)
                     st.session_state.hint_message = hint
-                    st.session_state.hint_mode = "show_hint"
+                    st.session_state.hint_mode = "chat" # ヒント生成後はチャットモードに戻す
                     st.rerun()
 
         # --- 通常のチャット入力フォーム ---
