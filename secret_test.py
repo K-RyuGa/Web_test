@@ -148,17 +148,20 @@ def generate_hint(hint_type, user_input=None):
         【今までの会話】
         {conversation_log}
         """
+        system_content = "あなたは親切な日本語学習の先生です。"
+
     elif hint_type == "word" and user_input:
         hint_instruction = f"""
-        あなたは日本語学習の補助AIです。
-        以下のゲームの状況と会話履歴を踏まえ、プレイヤーが質問した「{user_input}」という単語について、この文脈での意味と使い方を、日本語学習者にも分かりやすく、簡潔に説明してください。
+        あなたは日本語の辞書です。
+        プレイヤーが質問した「{user_input}」という単語の最も一般的な意味を、簡潔に、辞書のように説明してください。
+        余計な解説や例文は含めず、意味の定義だけを出力してください。
 
-        【ゲームの状況】
-        {game_prompt}
-
-        【今までの会話】
-        {conversation_log}
+        【出力形式の例】
+        ・（名詞）物事の根本となる、大切な部分。
+        ・（動詞）ある場所から他の場所へ動くこと。
         """
+        system_content = "あなたは日本語の辞書です。"
+
     else:
         return "ヒントを生成できませんでした。"
 
@@ -166,12 +169,13 @@ def generate_hint(hint_type, user_input=None):
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
-            {"role": "system", "content": "あなたは親切な日本語学習の先生です。"},
+            {"role": "system", "content": system_content},
             {"role": "user", "content": hint_instruction}
         ],
         temperature=0.25,
     )
     return response.choices[0].message.content
+
 
 
 # --- セッション管理初期化 ---
