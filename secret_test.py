@@ -197,26 +197,29 @@ st.session_state.setdefault("hint_message", "") # 表示するヒントメッセ
 if not st.session_state.logged_in:
     st.title("ログイン / 新規登録")
     mode = st.radio("モードを選択", ["ログイン", "新規登録"])
-    username = st.text_input("ユーザー名")
-    password = st.text_input("パスワード", type="password")
 
-    if st.button("送信"):
-        if mode == "新規登録":
-            if register_user(username, password):
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.session_state.clear_screen = False
-                st.rerun()
+    with st.form(key='login_form'):
+        username = st.text_input("ユーザー名")
+        password = st.text_input("パスワード", type="password")
+        submitted = st.form_submit_button("送信")
+
+        if submitted:
+            if mode == "新規登録":
+                if register_user(username, password):
+                    st.session_state.logged_in = True
+                    st.session_state.username = username
+                    st.session_state.clear_screen = False
+                    st.rerun()
+                else:
+                    st.error("そのユーザー名は既に使われています。")
             else:
-                st.error("そのユーザー名は既に使われています。")
-        else:
-            if check_password(username, password):
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.session_state.chat_history = []
-                st.rerun()
-            else:
-                st.error("ユーザー名またはパスワードが間違っています。")
+                if check_password(username, password):
+                    st.session_state.logged_in = True
+                    st.session_state.username = username
+                    st.session_state.chat_history = []
+                    st.rerun()
+                else:
+                    st.error("ユーザー名またはパスワードが間違っています。")
                             
 # --- ログイン後のUI ---
 if st.session_state.logged_in:
@@ -759,14 +762,18 @@ if st.session_state.logged_in:
 
         # --- 単語質問画面 ---
         elif st.session_state.hint_mode == "ask_word":
-            with st.form(key="word_hint_form"):
-                word_to_ask = st.text_input("意味を調べたい言葉を入力してください")
-                submit_word = st.form_submit_button("送信")
-                if submit_word and word_to_ask:
-                    hint = generate_hint("word", word_to_ask)
-                    st.session_state.hint_message = hint
-                    st.session_state.hint_mode = "chat" # ヒント生成後はチャットモードに戻す
-                    st.rerun()
+            with st.form(key="word_hint_form", clear_on_submit=True):
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    word_to_ask = st.text_input("意味を調べたい言葉を入力してください", label_visibility="collapsed", placeholder="意味を調べたい言葉を入力してください")
+                with col2:
+                    submit_word = st.form_submit_button("送信", use_container_width=True)
+
+            if submit_word and word_to_ask:
+                hint = generate_hint("word", word_to_ask)
+                st.session_state.hint_message = hint
+                st.session_state.hint_mode = "chat"  # ヒント生成後はチャットモードに戻す
+                st.rerun()
 
         # --- 通常のチャット入力フォーム ---
         elif st.session_state.hint_mode == "chat":
