@@ -195,26 +195,29 @@ st.session_state.setdefault("Failed_screen",False)
 if not st.session_state.logged_in:
     st.title("Login / Sign Up")
     mode = st.radio("Select Mode", ["Login", "Sign Up"])
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
 
-    if st.button("Submit"):
-        if mode == "Sign Up":
-            if register_user(username, password):
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.session_state.clear_screen = False
-                st.rerun()
+    with st.form(key='login_form'):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Submit")
+
+        if submitted:
+            if mode == "Sign Up":
+                if register_user(username, password):
+                    st.session_state.logged_in = True
+                    st.session_state.username = username
+                    st.session_state.clear_screen = False
+                    st.rerun()
+                else:
+                    st.error("This username is already taken.")
             else:
-                st.error("This username is already taken.")
-        else:
-            if check_password(username, password):
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.session_state.chat_history = []
-                st.rerun()
-            else:
-                st.error("Incorrect username or password.")
+                if check_password(username, password):
+                    st.session_state.logged_in = True
+                    st.session_state.username = username
+                    st.session_state.chat_history = []
+                    st.rerun()
+                else:
+                    st.error("Incorrect username or password.")
                             
 # --- UI After Login ---
 if st.session_state.logged_in:
@@ -602,7 +605,7 @@ if st.session_state.logged_in:
             temperature=0.25,
         )
         evaluation_result = evaluation_response.choices[0].message.content
-        st.markdown("### Conversation Evaluation")
+        st.markdown("### 会話の評価")
         st.markdown(evaluation_result)
         now_str = datetime.now(UTC).strftime('%Y/%m/%d %H:%M\n')
         record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
@@ -679,14 +682,14 @@ if st.session_state.logged_in:
 
         # --- ヒント選択画面 ---
         if st.session_state.hint_mode == "select":
-            st.markdown("What kind of hint do you need?")
+            st.markdown("どのようなヒントが必要ですか？")
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("Look up word meaning", use_container_width=True):
+                if st.button("言葉の意味を調べる", use_container_width=True):
                     st.session_state.hint_mode = "ask_word"
                     st.rerun()
             with col2:
-                if st.button("Hint for next action", use_container_width=True):
+                if st.button("次の行動のヒント", use_container_width=True):
                     hint = generate_hint("action")
                     st.session_state.hint_message = hint
                     st.session_state.hint_mode = "chat" # ヒント生成後はチャットモードに戻す
@@ -697,9 +700,9 @@ if st.session_state.logged_in:
             with st.form(key="word_hint_form", clear_on_submit=True):
                 col1, col2 = st.columns([4, 1])
                 with col1:
-                    word_to_ask = st.text_input("Enter the word you want to look up", label_visibility="collapsed", placeholder="Enter the word you want to look up")
+                    word_to_ask = st.text_input("意味を調べたい言葉を入力してください", label_visibility="collapsed", placeholder="意味を調べたい言葉を入力してください")
                 with col2:
-                    submit_word = st.form_submit_button("Submit", use_container_width=True)
+                    submit_word = st.form_submit_button("送信", use_container_width=True)
 
             if submit_word and word_to_ask:
                 hint = generate_hint("word", word_to_ask)
@@ -717,7 +720,7 @@ if st.session_state.logged_in:
                 with col2:
                     submit_button = st.form_submit_button("Send", use_container_width=True)
                 with col3:
-                    if st.form_submit_button("💡 Hint", use_container_width=True):
+                    if st.form_submit_button("💡 ヒント", use_container_width=True):
                         st.session_state.hint_mode = "select"
                         st.rerun()
 
