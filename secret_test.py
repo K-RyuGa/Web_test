@@ -780,7 +780,7 @@ if st.session_state.logged_in:
             with st.form(key="chat_form", clear_on_submit=True):
                 col1, col2, col3 = st.columns([4, 1, 1])
                 with col1:
-                    user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
+                    user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed", value=st.session_state.get("input_msg", ""))
                     components.html(f'''<div>...</div><script>...</script>''', height=0)
                 with col2:
                     submit_button = st.form_submit_button("送信", use_container_width=True)
@@ -804,6 +804,7 @@ if st.session_state.logged_in:
                 reply = response.choices[0].message.content
                 st.session_state.chat_history.append(f"ユーザー: {user_input}")
                 st.session_state.chat_history.append(f"AI: {reply}")
+                st.session_state.input_msg = "" # 入力フィールドをクリア
                 full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 record_message(st.session_state.username, full_message,"message")
                 
