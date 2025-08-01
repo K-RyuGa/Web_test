@@ -193,8 +193,8 @@ st.session_state.setdefault("Failed_screen",False)
 
 # --- UI Before Login ---
 if not st.session_state.logged_in:
-    st.title("Login / Sign Up")
-    mode = st.radio("Select Mode", ["Login", "Sign Up"])
+    st.title("Login / Register")
+    mode = st.radio("Select Mode", ["Login", "Register"])
 
     with st.form(key='login_form'):
         username = st.text_input("Username")
@@ -202,14 +202,14 @@ if not st.session_state.logged_in:
         submitted = st.form_submit_button("Submit")
 
         if submitted:
-            if mode == "Sign Up":
+            if mode == "Register":
                 if register_user(username, password):
                     st.session_state.logged_in = True
                     st.session_state.username = username
                     st.session_state.clear_screen = False
                     st.rerun()
                 else:
-                    st.error("This username is already taken.")
+                    st.error("That username is already taken.")
             else:
                 if check_password(username, password):
                     st.session_state.logged_in = True
@@ -261,7 +261,8 @@ if st.session_state.logged_in:
         '''
 
         end_prompt = '''
-            "Mission Accomplished" is the keyword for clearing the game, so never output it if the mission has not been achieved.
+            "Mission Accomplished" is the keyword for clearing the game. If the player achieves the mission, you **must** output "Mission Accomplished". At that time, **do not include any other unnecessary conversation.** Until then, continue to encourage the player to take actions to achieve the mission.
+            Conversely, if the player's words and actions are significantly inappropriate, or if the conversation completely breaks down, output "Mission Failed".
             Now, let the game begin. Please start talking to the player.
         '''
 
