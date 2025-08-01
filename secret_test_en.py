@@ -531,66 +531,66 @@ if st.session_state.logged_in:
         st.success("Mission Accomplished! Congratulations!")
         
         evaluation_prompt = '''
-            You are an evaluation system for a Japanese language learning game I am creating.
-            Your role is to analyze the player's conversation history and provide evaluation and feedback from the following three perspectives.
+            あなたは私が作成する日本語学習ゲームの評価システムです。
+            プレイヤーの会話履歴を分析し、以下の3つの観点から評価とフィードバックを提供してください。
 
-            **[Important] Evaluation Procedure**
-            1.  First, analyze the entire conversation in detail from the three perspectives: "1. Grammar & Vocabulary," "2. TPO & Politeness," and "3. Natural Flow of Conversation."
-            2.  Next, score each perspective on a 100-point scale based on the scoring criteria.
-            3.  Finally, generate feedback for the player according to the [Output Format] below.
+            **[重要] 評価手順**
+            1.  まず、「1. 文法・語彙」「2. TPO・丁寧さ」「3. 会話の自然な流れ」の3つの観点から、会話全体を詳細に分析してください。
+            2.  次に、採点基準に基づいて各観点を100点満点で採点してください。
+            3.  最後に、以下の[出力形式]に従って、プレイヤーへのフィードバックを生成してください。
 
-            **[Scoring Criteria by Perspective]**
+            **[観点別採点基準]**
 
-            **1. Grammar & Vocabulary**
-            *   90-100 points: Almost no errors in grammar or vocabulary; very natural and appropriate.
-            *   70-89 points: Minor errors (e.g., particles), but the intent is clearly conveyed.
-            *   40-69 points: Many errors, requiring the other person to guess the meaning at times.
-            *   0-39 points: So many errors that communication is difficult.
+            **1. 文法・語彙**
+            *   90-100点: 文法や語彙にほとんど誤りがなく、非常に自然で適切。
+            *   70-89点: 軽微な誤り（例: 助詞）はあるが、意図は明確に伝わる。
+            *   40-69点: 誤りが多く、相手が意味を推測する必要がある場面が時々ある。
+            *   0-39点: 誤りが非常に多く、コミュニケーションが困難。
 
-            **2. TPO & Politeness**
-            *   90-100 points: Perfect use of language appropriate for the TPO (Time, Place, Occasion) and the relationship with the other person.
-            *   70-89 points: Slightly unnatural choices in politeness, but no major issues.
-            *   40-69 points: Noticeable use of language inappropriate for the TPO or improper politeness.
-            *   0-39 points: Language that significantly ignores TPO or is rude.
+            **2. TPO・丁寧さ**
+            *   90-100点: TPO（時・場所・場面）や相手との関係性に合わせた言葉遣いが完璧。
+            *   70-89点: 丁寧さの選択にやや不自然な点があるが、大きな問題はない。
+            *   40-69点: TPOに不適切な言葉遣いや、不適切な丁寧さが目立つ。
+            *   0-39点: TPOを著しく無視した言葉遣いや、失礼な表現。
 
-            **3. Natural Flow of Conversation**
-            *   90-100 points: The conversation flows smoothly, and the interaction to achieve the goal is seamless.
-            *   70-89 points: The goal is achieved, but there are occasional stumbles or unnatural pauses in responses.
-            *   40-69 points: The conversation is awkward, and there are times when the dialogue doesn't connect.
-            *   0-39 points: The conversation is not established at all or deviates significantly from the objective.
+            **3. 会話の自然な流れ**
+            *   90-100点: 会話がスムーズに進行し、目標達成に向けたやり取りが滞りない。
+            *   70-89点: 目標は達成されているが、時折、応答に詰まったり、不自然な間があったりする。
+            *   40-69点: 会話がぎこちなく、話が繋がらない場面がある。
+            *   0-39点: 会話が全く成立しない、または目的から大きく逸脱している。
 
-            **[Output Format]**
-            Please strictly adhere to the following Markdown format and output the score and feedback for each perspective.
+            **[出力形式]**
+            以下のMarkdown形式を厳守し、各観点の点数とフィードバックを出力してください。
 
-            **[Overall Evaluation]**
-            (A positive, encouraging comment about the entire conversation)
-
-            ---
-
-            ### 1. Grammar & Vocabulary
-            **Score:** XX/100
-            **Feedback:**
-            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
-            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
+            **[総合評価]**
+            （会話全体に対する肯定的で励ましとなるコメント）
 
             ---
 
-            ### 2. TPO & Politeness
-            **Score:** XX/100
-            **Feedback:**
-            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
-            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
+            ### 1. 文法・語彙
+            **点数:** XX/100
+            **フィードバック:**
+            *   **良かった点:** （会話の特定の部分を引用し、何が良かったかを簡潔に説明）
+            *   **改善点:** （会話の特定の部分を引用し、どのように改善できるかを簡潔に説明）
 
             ---
 
-            ### 3. Natural Flow of Conversation
-            **Score:** XX/100
-            **Feedback:**
-            *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
-            *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
+            ### 2. TPO・丁寧さ
+            **点数:** XX/100
+            **フィードバック:**
+            *   **良かった点:** （会話の特定の部分を引用し、何が良かったかを簡潔に説明）
+            *   **改善点:** （会話の特定の部分を引用し、どのように改善できるかを簡潔に説明）
+
+            ---
+
+            ### 3. 会話の自然な流れ
+            **点数:** XX/100
+            **フィードバック:**
+            *   **良かった点:** （会話の特定の部分を引用し、何が良かったかを簡潔に説明）
+            *   **改善点:** （会話の特定の部分を引用し、どのように改善できるかを簡潔に説明）
         '''
         summary_prompt = '''
-            あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部である、**プレイヤーの言語的課題分析機能**を担当してもらいます。
+            あなたは私が作成する日本語学習ゲームのシステムの一部である、**プレイヤーの言語的課題分析機能**を担当してもらいます。
             あなたの役割は、以下の会話履歴を分析し、プレイヤーが日本語でのコミュニケーションにおいて抱えている「課題」を客観的に抽出することです。
 
             【重要】分析のルール
@@ -619,7 +619,7 @@ if st.session_state.logged_in:
             temperature=0.25,
         )
         evaluation_result = evaluation_response.choices[0].message.content
-        st.markdown("### 会話の評価")
+                st.markdown("### 会話の評価")
         st.markdown(evaluation_result)
         now_str = datetime.now(UTC).strftime('%Y/%m/%d %H:%M\n')
         record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
