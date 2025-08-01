@@ -619,7 +619,7 @@ if st.session_state.logged_in:
             temperature=0.25,
         )
         evaluation_result = evaluation_response.choices[0].message.content
-                st.markdown("### 会話の評価")
+        st.markdown("### 会話の評価")
         st.markdown(evaluation_result)
         now_str = datetime.now(UTC).strftime('%Y/%m/%d %H:%M\n')
         record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
