@@ -293,7 +293,7 @@ def run_post_game_analysis():
                             <div style='margin-bottom: 5px; opacity: 0.7;'>
                                 {before}<span style='text-decoration: line-through;'>{wrong}</span>{after}
                             </div>
-                            <div style='margin-bottom: 8px; font-weight: bold;'>
+                            <div style='margin-bottom: 8px;'>
                                 {before}<span style='color: #388e3c;'>{correct}</span>{after}
                             </div>
                             <div style='padding: 8px; background-color: #f0f0f0; border-radius: 4px; font-size: 0.9em; color: #555;'>
