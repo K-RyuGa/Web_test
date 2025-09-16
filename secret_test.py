@@ -326,7 +326,7 @@ def run_post_game_analysis():
         temperature=0.25,
     )
     summary_result = summary_response.choices[0].message.content
-    record_message(st.session_state.username, summary_result, 'player_summary')'
+    record_message(st.session_state.username, summary_result, 'player_summary')
 
 
 
