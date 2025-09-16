@@ -280,8 +280,8 @@ def run_post_game_analysis():
         temperature=0.25,
     )
     summary_result = summary_response.choices[0].message.content
-    # この要約は画面には表示せず、裏側で記録する
     record_message(st.session_state.username, summary_result, 'player_summary')
+
 
 
 
