@@ -777,17 +777,31 @@ if st.session_state.logged_in:
 
         # --- 通常のチャット入力フォーム ---
         elif st.session_state.hint_mode == "chat":
-            with st.form(key="chat_form", clear_on_submit=True):
+            with st.form(key="chat_form", clear_on_submit=True, border=False):
                 col1, col2, col3 = st.columns([4, 1, 1])
                 with col1:
-                    user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed")
-                    components.html(f'''<div>...</div><script>...</script>''', height=0)
+                    user_input = st.text_input("あなたのメッセージを入力してください", key="input_msg", label_visibility="collapsed", placeholder="メッセージを入力...")
                 with col2:
                     submit_button = st.form_submit_button("送信", use_container_width=True)
                 with col3:
                     if st.form_submit_button("💡 Hint", use_container_width=True):
                         st.session_state.hint_mode = "select"
                         st.rerun()
+            
+            # オートフォーカス用のJavaScript
+            components.html(
+                """
+                <script>
+                    var input = parent.document.querySelector('input[aria-label="あなたのメッセージを入力してください"]');
+                    if (input) {
+                        setTimeout(function() {
+                            input.focus();
+                        }, 0);
+                    }
+                </script>
+                """,
+                height=0
+            )
 
             if submit_button and user_input.strip():
                 # (既存の送信処理)

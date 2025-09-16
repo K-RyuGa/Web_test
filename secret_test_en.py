@@ -610,6 +610,7 @@ if st.session_state.logged_in:
         conversation_log = "\n".join(st.session_state.chat_history)
         client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
+
         evaluation_response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
