@@ -280,6 +280,29 @@ def run_post_game_analysis():
             # ユーザーの発言
             if line.startswith("ユーザー:"):
                 msg_content = line.replace("ユーザー:", "").strip()
+                
+                # 添削フォーマットの正規表現: (文の前半)[正しい表現][間違った表現](文の後半) (理由)
+                match = re.search(r"^(.*)[\[](.+?)[\ своём][\ своё](.+?)[\ своё](.*?)\\s*\\((.+?)\\)\\s*$", msg_content)
+
+                if match:
+                    before, correct, wrong, after, reason = match.groups()
+                    
+                    # 表示用のHTMLを生成
+                    formatted_content = f"""
+                        <div style='text-align: left; width: 100%;'>
+                            <div style='margin-bottom: 5px; opacity: 0.7;'>
+                                {before}<span style='text-decoration: line-through;'>{wrong}</span>{after}
+                            </div>
+                            <div style='margin-bottom: 8px; font-weight: bold;'>
+                                {before}<span style='color: #388e3c;'>{correct}</span>{after}
+                            </div>
+                            <div style='padding: 8px; background-color: #f0f0f0; border-radius: 4px; font-size: 0.9em; color: #555;'>
+                                💡 {reason}
+                            </div>
+                        </div>
+                    """
+                    msg_content = formatted_content.strip()
+
                 st.markdown(
                     f"""<div style='display: flex; justify-content: flex-end; margin: 4px 0'>
                             <div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>
