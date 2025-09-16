@@ -128,7 +128,7 @@ def generate_hint(hint_type, user_input=None):
     conversation_log = "\n".join(st.session_state.chat_history)
 
     if hint_type == "action":
-        hint_instruction = f"""
+        hint_instruction = f'''
         You are a Japanese learning support AI.
         Based on the following game situation and conversation history, please generate a very short hint to prompt the player for their next action.
 
@@ -147,11 +147,11 @@ def generate_hint(hint_type, user_input=None):
 
         **[Conversation So Far]**
         {conversation_log}
-        """
+        '''
         system_content = "You are a kind Japanese language teacher."
 
     elif hint_type == "word" and user_input:
-        hint_instruction = f"""
+        hint_instruction = f'''
         You are a Japanese dictionary.
         Please explain the most common meaning of the word ''{user_input}'' that the player asked about, concisely, like a dictionary.
         Do not include extra explanations or example sentences; only output the definition of the meaning.
@@ -159,7 +159,7 @@ def generate_hint(hint_type, user_input=None):
         **[Output Format Example]**
         *   (Noun) The fundamental, important part of things.
         *   (Verb) To move from one place to another.
-        """
+        '''
         system_content = "You are a Japanese dictionary."
 
     else:
@@ -177,6 +177,115 @@ def generate_hint(hint_type, user_input=None):
     )
     return response.choices[0].message.content
 
+# --- 評価＆要約実行関数 ---
+def run_post_game_analysis():
+    evaluation_prompt = '''
+        あなたは、私が作成している日本語学習ゲームの評価システムです。
+        あなたの役割は、プレイヤーの会話履歴と、その会話が行われた状況（TPO）を分析し、以下の3つの観点から評価とフィードバックを提供することです。
+
+        **【重要】評価の手順**
+        1.  まず、与えられた「評価対象の状況」をよく読み、会話の背景（誰と、どこで、何をしているか）を完全に理解します。
+        2.  次に、その状況を踏まえた上で会話全体を「1. 文法と語彙」「2. TPOと丁寧さ」「3. 会話の自然な流れ」の3つの観点から詳細に分析します。
+        3.  採点基準に基づいて各観点を100点満点で採点します。
+        4.  最後に、下記の【出力フォーマット】に従って、プレイヤーへのフィードバックを生成します。
+
+        **【観点別の採点基準】**
+
+        **1. 文法と語彙**
+        *   90-100点：文法や語彙の誤りがほとんどなく、非常に自然で適切。
+        *   70-89点：助詞などの細かい誤りは見られるが、意図は明確に伝わる。
+        *   40-69点：誤りが多く、相手が意味を推測する必要がある場面がある。
+        *   0-39点：誤りが多すぎて、コミュニケーションが困難。
+
+        **2. TPOと丁寧さ**
+        *   90-100点：TPO（時・場所・場面）や相手との関係性に応じた言葉遣いが完璧。
+        *   70-89点：丁寧さの選択にやや不自然な点があるが、大きな問題はない。
+        *   40-69点：TPOにそぐわない言葉遣いや、不適切な丁寧さが目立つ。
+        *   0-39点：TPOを著しく無視した、または無礼な言葉遣い。
+
+        **3. 会話の自然な流れ**
+        *   90-100点：会話の流れがスムーズで、目的達成までのやり取りに無駄がない。
+        *   70-89点：目的は達成できているが、返答に時折詰まったり、不自然な間があったりする。
+        *   40-69点：会話がぎこちなく、対話が噛み合わないことがある。
+        *   0-39点：会話が全く成立していない、または目的から大きく逸脱している。
+
+        **【出力フォーマット】**
+        以下のMarkdownフォーマットを厳守し、各観点のスコアとフィードバックを出力してください。
+
+        ### 1. 文法と語彙
+        **スコア:** XX/100
+        **フィードバック:**
+        *   **気になった点・改善点:** （もし改善すべき点や、より自然な表現にするための提案があれば、具体的な部分を引用し、どのように改善できるかを複数、具体的に説明。なければ「特になし」と記述してください。）
+
+        ---
+
+        ### 2. TPOと丁寧さ
+        **スコア:** XX/100
+        **フィードバック:**
+        *   **気になった点・改善点:** （もし改善すべき点や、より自然な表現にするための提案があれば、具体的な部分を引用し、どのように改善できるかを複数、具体的に説明。なければ「特になし」と記述してください。）
+
+        ---
+
+        ### 3. 会話の自然な流れ
+        **スコア:** XX/100
+        **フィードバック:**
+        *   **気になった点・改善点:** （もし改善すべき点や、より自然な表現にするための提案があれば、具体的な部分を引用し、どのように改善できるかを複数、具体的に説明。なければ「特になし」と記述してください。）
+    '''
+    # --- Game.pyから移植した要約プロンプト ---
+    summary_prompt = '''
+        あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部である、**プレイヤーの言語的課題分析機能**を担当してもらいます。
+        あなたの役割は、以下の会話履歴を分析し、プレイヤーが日本語でのコミュニケーションにおいて抱えている「課題」を客観的に抽出することです。
+
+        【重要】分析のルール
+        *   プレイヤーの性格、気分、個性、意図などを**絶対に分析・記述してはいけません**。
+        *   抽出する情報は、**純粋に言語的・コミュニケーション戦略的な課題**に限定してください。
+        *   以下の観点に沿って、具体的な課題を簡潔な箇条書きで出力してください。
+
+        【分析の観点】
+        1.  **文法・語彙の誤り**: 助詞（は/が/を/に等）の間違い、動詞の活用ミス、不適切な単語の選択。
+        2.  **敬語・丁寧語のレベル**: 場面にそぐわない丁寧すぎる、または、くだけすぎた表現。
+        3.  **コミュニケーション戦略**: 質問への応答が不自然に短い/長い、話の展開が唐突、相手への配慮が欠けた直接的すぎる表現など。
+        4.  **会話の流れの阻害**: 文脈を無視した発言、会話の目的から逸脱した言動など。
+
+        以下の会話履歴を分析し、上記の観点から課題のみを箇条書きで出力してください。
+    '''
+    
+    conversation_log = "\n".join(st.session_state.chat_history)
+    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
+    # --- 評価を生成して表示・記録 ---
+    # 評価のために、会話ログに「状況」のコンテキストを追加
+    scenario_title = st.session_state.style_label
+    # chapter_descriptions はグローバルスコープにある想定
+    scenario_description = chapter_descriptions.get(scenario_title, "")
+    eval_user_content = f"""**[評価対象の状況]**\nシナリオ: {scenario_title}\n状況設定: {scenario_description}\n\n**[会話ログ]**\n{conversation_log}"""
+
+    evaluation_response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": evaluation_prompt},
+            {"role": "user", "content": eval_user_content}
+        ],
+        temperature=0.25,
+    )
+    evaluation_result = evaluation_response.choices[0].message.content
+    st.markdown("### Conversation Evaluation")
+    st.markdown(evaluation_result)
+    now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\n')
+    record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
+
+    # --- 行動履歴の要約を生成して記録 ---
+    summary_response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": summary_prompt},
+            {"role": "user", "content": conversation_log}
+        ],
+        temperature=0.25,
+    )
+    summary_result = summary_response.choices[0].message.content
+    # この要約は画面には表示せず、裏側で記録する
+    record_message(st.session_state.username, summary_result, 'player_summary')
 
 
 # --- セッション管理初期化 ---
@@ -490,7 +599,7 @@ if st.session_state.logged_in:
         - AIとの対話を通じてリアルな会話練習ができます  
         - あなたの会話スタイルに合わせてストーリーが変化します  
         - 誤りがあった場合もフィードバックがもらえます
-        """)
+        """, unsafe_allow_html=True)
      
         st.info("まずは左のサイドバーから、練習したいシチュエーションを選んでみましょう！")
         # st.markdown("### 💬 質問がある場合")
@@ -561,183 +670,10 @@ if st.session_state.logged_in:
             record_message(st.session_state.username, full_message, "message")
             
     if st.session_state["clear_screen"]:
-        
         st.success("ミッション達成！おめでとうございます！")
-        
-        # --- Game.pyから移植した詳細な評価プロンプト ---
-        # evaluation_prompt = '''
-        #     You are an evaluation system for a Japanese language learning game I am creating.
-        #     Your role is to analyze the player's conversation history and provide evaluation and feedback from the following three perspectives.
-        #
-        #     **[Important] Evaluation Procedure**
-        #     1.  First, analyze the entire conversation in detail from the three perspectives: "1. Grammar & Vocabulary," "2. TPO & Politeness," and "3. Natural Flow of Conversation."
-        #     2.  Next, score each perspective on a 100-point scale based on the scoring criteria.
-        #     3.  Finally, generate feedback for the player according to the [Output Format] below.
-        #
-        #     **[Scoring Criteria by Perspective]**
-        #
-        #     **1. Grammar & Vocabulary**
-        #     *   90-100 points: Almost no errors in grammar or vocabulary; very natural and appropriate.
-        #     *   70-89 points: Minor errors (e.g., particles), but the intent is clearly conveyed.
-        #     *   40-69 points: Many errors, requiring the other person to guess the meaning at times.
-        #     *   0-39 points: So many errors that communication is difficult.
-        #
-        #     **2. TPO & Politeness**
-        #     *   90-100 points: Perfect use of language appropriate for the TPO (Time, Place, Occasion) and the relationship with the other person.
-        #     *   70-89 points: Slightly unnatural choices in politeness, but no major issues.
-        #     *   40-69 points: Noticeable use of language inappropriate for the TPO or improper politeness.
-        #     *   0-39 points: Language that significantly ignores TPO or is rude.
-        #
-        #     **3. Natural Flow of Conversation**
-        #     *   90-100 points: The conversation flows smoothly, and the interaction to achieve the goal is seamless.
-        #     *   70-89 points: The goal is achieved, but there are occasional stumbles or unnatural pauses in responses.
-        #     *   40-69 points: The conversation is awkward, and there are times when the dialogue doesn't connect.
-        #     *   0-39 points: The conversation is not established at all or deviates significantly from the objective.
-        #
-        #     **[Output Format]**
-        #     Please strictly adhere to the following Markdown format and output the score and feedback for each perspective.
-        #
-        #     **[Overall Evaluation]**
-        #     (A positive, encouraging comment about the entire conversation)
-        #
-        #     ---
-        #
-        #     ### 1. Grammar & Vocabulary
-        #     **Score:** XX/100
-        #     **Feedback:**
-        #     *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
-        #     *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
-        #
-        #     ---
-        #
-        #     ### 2. TPO & Politeness
-        #     **Score:** XX/100
-        #     **Feedback:**
-        #     *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
-        #     *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
-        #
-        #     ---
-        #
-        #     ### 3. Natural Flow of Conversation
-        #     **Score:** XX/100
-        #     **Feedback:**
-        #     *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
-        #     *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
-        # '''
-        evaluation_prompt = '''
-            あなたは、私が作成している日本語学習ゲームの評価システムです。
-            あなたの役割は、プレイヤーの会話履歴を分析し、以下の3つの観点から評価とフィードバックを提供することです。
-
-            **【重要】評価の手順**
-            1.  まず、会話全体を「1. 文法と語彙」「2. TPOと丁寧さ」「3. 会話の自然な流れ」の3つの観点から詳細に分析します。
-            2.  次に、採点基準に基づいて各観点を100点満点で採点します。
-            3.  最後に、下記の【出力フォーマット】に従って、プレイヤーへのフィードバックを生成します。
-
-            **【観点別の採点基準】**
-
-            **1. 文法と語彙**
-            *   90-100点：文法や語彙の誤りがほとんどなく、非常に自然で適切。
-            *   70-89点：助詞などの細かい誤りは見られるが、意図は明確に伝わる。
-            *   40-69点：誤りが多く、相手が意味を推測する必要がある場面がある。
-            *   0-39点：誤りが多すぎて、コミュニケーションが困難。
-
-            **2. TPOと丁寧さ**
-            *   90-100点：TPO（時・場所・場面）や相手との関係性に応じた言葉遣いが完璧。
-            *   70-89点：丁寧さの選択にやや不自然な点があるが、大きな問題はない。
-            *   40-69点：TPOにそぐわない言葉遣いや、不適切な丁寧さが目立つ。
-            *   0-39点：TPOを著しく無視した、または無礼な言葉遣い。
-
-            **3. 会話の自然な流れ**
-            *   90-100点：会話の流れがスムーズで、目的達成までのやり取りに無駄がない。
-            *   70-89点：目的は達成できているが、返答に時折詰まったり、不自然な間があったりする。
-            *   40-69点：会話がぎこちなく、対話が噛み合わないことがある。
-            *   0-39点：会話が全く成立していない、または目的から大きく逸脱している。
-
-            **【出力フォーマット】**
-            以下のMarkdownフォーマットを厳守し、各観点のスコアとフィードバックを出力してください。
-
-            **【総合評価】**
-            （会話全体に対する、ポジティブで励みになるようなコメント）
-
-            ---
-
-            ### 1. 文法と語彙
-            **スコア:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （会話の具体的な部分を引用し、何が良かったかを簡潔に説明）
-            *   **改善点:** （会話の具体的な部分を引用し、どのように改善できるかを簡潔に説明）
-
-            ---
-
-            ### 2. TPOと丁寧さ
-            **スコア:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （会話の具体的な部分を引用し、何が良かったかを簡潔に説明）
-            *   **改善点:** （会話の具体的な部分を引用し、どのように改善できるかを簡潔に説明）
-
-            ---
-
-            ### 3. 会話の自然な流れ
-            **スコア:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （会話の具体的な部分を引用し、何が良かったかを簡潔に説明）
-            *   **改善点:** （会話の具体的な部分を引用し、どのように改善できるかを簡潔に説明）
-        '''
-        # --- Game.pyから移植した要約プロンプト ---
-        summary_prompt = '''
-            あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部である、**プレイヤーの言語的課題分析機能**を担当してもらいます。
-            あなたの役割は、以下の会話履歴を分析し、プレイヤーが日本語でのコミュニケーションにおいて抱えている「課題」を客観的に抽出することです。
-
-            【重要】分析のルール
-            *   プレイヤーの性格、気分、個性、意図などを**絶対に分析・記述してはいけません**。
-            *   抽出する情報は、**純粋に言語的・コミュニケーション戦略的な課題**に限定してください。
-            *   以下の観点に沿って、具体的な課題を簡潔な箇条書きで出力してください。
-
-            【分析の観点】
-            1.  **文法・語彙の誤り**: 助詞（は/が/を/に等）の間違い、動詞の活用ミス、不適切な単語の選択。
-            2.  **敬語・丁寧語のレベル**: 場面にそぐわない丁寧すぎる、または、くだけすぎた表現。
-            3.  **コミュニケーション戦略**: 質問への応答が不自然に短い/長い、話の展開が唐突、相手への配慮が欠けた直接的すぎる表現など。
-            4.  **会話の流れの阻害**: 文脈を無視した発言、会話の目的から逸脱した言動など。
-
-            以下の会話履歴を分析し、上記の観点から課題のみを箇条書きで出力してください。
-        '''
-        
-        conversation_log = "\n".join(st.session_state.chat_history)
-        client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-
-        # --- 評価を生成して表示・記録 ---
-        evaluation_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": evaluation_prompt},
-                {"role": "user", "content": conversation_log}
-            ],
-            temperature=0.25,
-        )
-        evaluation_result = evaluation_response.choices[0].message.content
-        st.markdown("### Conversation Evaluation")
-        st.markdown(evaluation_result)
-        now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\n')
-        record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
-
-        # --- 行動履歴の要約を生成して記録 ---
-        summary_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": summary_prompt},
-                {"role": "user", "content": conversation_log}
-            ],
-            temperature=0.25,
-        )
-        summary_result = summary_response.choices[0].message.content
-        # この要約は画面には表示せず、裏側で記録する
-        record_message(st.session_state.username, summary_result, 'player_summary')
-
-      
-
+        run_post_game_analysis()
         # 「もう一度やる」ボタン
         if st.button("🔁 最初からやり直す"):
-            
             st.session_state.chat_history = []
             st.session_state["clear_screen"] = False
             st.session_state["show_history"] = False
@@ -998,176 +934,7 @@ if st.session_state.logged_in:
     
     elif st.session_state.Failed_screen:
         st.error("ミッション失敗...")
-        
-        # --- 詳細な評価プロンプト ---
-        # evaluation_prompt = '''
-        #     You are an evaluation system for a Japanese language learning game I am creating.
-        #     Your role is to analyze the player's conversation history and provide evaluation and feedback from the following three perspectives.
-        #
-        #     **[Important] Evaluation Procedure**
-        #     1.  First, analyze the entire conversation in detail from the three perspectives: "1. Grammar & Vocabulary," "2. TPO & Politeness," and "3. Natural Flow of Conversation."
-        #     2.  Next, score each perspective on a 100-point scale based on the scoring criteria.
-        #     3.  Finally, generate feedback for the player according to the [Output Format] below.
-        #
-        #     **[Scoring Criteria by Perspective]**
-        #
-        #     **1. Grammar & Vocabulary**
-        #     *   90-100 points: Almost no errors in grammar or vocabulary; very natural and appropriate.
-        #     *   70-89 points: Minor errors (e.g., particles), but the intent is clearly conveyed.
-        #     *   40-69 points: Many errors, requiring the other person to guess the meaning at times.
-        #     *   0-39 points: So many errors that communication is difficult.
-        #
-        #     **2. TPO & Politeness**
-        #     *   90-100 points: Perfect use of language appropriate for the TPO (Time, Place, Occasion) and the relationship with the other person.
-        #     *   70-89 points: Slightly unnatural choices in politeness, but no major issues.
-        #     *   40-69 points: Noticeable use of language inappropriate for the TPO or improper politeness.
-        #     *   0-39 points: Language that significantly ignores TPO or is rude.
-        #
-        #     **3. Natural Flow of Conversation**
-        #     *   90-100 points: The conversation flows smoothly, and the interaction to achieve the goal is seamless.
-        #     *   70-89 points: The goal is achieved, but there are occasional stumbles or unnatural pauses in responses.
-        #     *   40-69 points: The conversation is awkward, and there are times when the dialogue doesn't connect.
-        #     *   0-39 points: The conversation is not established at all or deviates significantly from the objective.
-        #
-        #     **[Output Format]**
-        #     Please strictly adhere to the following Markdown format and output the score and feedback for each perspective.
-        #
-        #     **[Overall Evaluation]**
-        #     (A positive, encouraging comment about the entire conversation)
-        #
-        #     ---
-        #
-        #     ### 1. Grammar & Vocabulary
-        #     **Score:** XX/100
-        #     **Feedback:**
-        #     *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
-        #     *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
-        #
-        #     ---
-        #
-        #     ### 2. TPO & Politeness
-        #     **Score:** XX/100
-        #     **Feedback:**
-        #     *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
-        #     *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
-        #
-        #     ---
-        #
-        #     ### 3. Natural Flow of Conversation
-        #     **Score:** XX/100
-        #     **Feedback:**
-        #     *   **Good Points:** (Quote a specific part of the conversation and briefly explain what was good)
-        #     *   **Points for Improvement:** (Quote a specific part of the conversation and briefly explain how it could be improved)
-        # '''
-        evaluation_prompt = '''
-            あなたは、私が作成している日本語学習ゲームの評価システムです。
-            あなたの役割は、プレイヤーの会話履歴を分析し、以下の3つの観点から評価とフィードバックを提供することです。
-
-            **【重要】評価の手順**
-            1.  まず、会話全体を「1. 文法と語彙」「2. TPOと丁寧さ」「3. 会話の自然な流れ」の3つの観点から詳細に分析します。
-            2.  次に、採点基準に基づいて各観点を100点満点で採点します。
-            3.  最後に、下記の【出力フォーマット】に従って、プレイヤーへのフィードバックを生成します。
-
-            **【観点別の採点基準】**
-
-            **1. 文法と語彙**
-            *   90-100点：文法や語彙の誤りがほとんどなく、非常に自然で適切。
-            *   70-89点：助詞などの細かい誤りは見られるが、意図は明確に伝わる。
-            *   40-69点：誤りが多く、相手が意味を推測する必要がある場面がある。
-            *   0-39点：誤りが多すぎて、コミュニケーションが困難。
-
-            **2. TPOと丁寧さ**
-            *   90-100点：TPO（時・場所・場面）や相手との関係性に応じた言葉遣いが完璧。
-            *   70-89点：丁寧さの選択にやや不自然な点があるが、大きな問題はない。
-            *   40-69点：TPOにそぐわない言葉遣いや、不適切な丁寧さが目立つ。
-            *   0-39点：TPOを著しく無視した、または無礼な言葉遣い。
-
-            **3. 会話の自然な流れ**
-            *   90-100点：会話の流れがスムーズで、目的達成までのやり取りに無駄がない。
-            *   70-89点：目的は達成できているが、返答に時折詰まったり、不自然な間があったりする。
-            *   40-69点：会話がぎこちなく、対話が噛み合わないことがある。
-            *   0-39点：会話が全く成立していない、または目的から大きく逸脱している。
-
-            **【出力フォーマット】**
-            以下のMarkdownフォーマットを厳守し、各観点のスコアとフィードバックを出力してください。
-
-            **【総合評価】**
-            （会話全体に対する、ポジティブで励みになるようなコメント）
-
-            ---
-
-            ### 1. 文法と語彙
-            **スコア:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （会話の具体的な部分を引用し、何が良かったかを簡潔に説明）
-            *   **改善点:** （会話の具体的な部分を引用し、どのように改善できるかを簡潔に説明）
-
-            ---
-
-            ### 2. TPOと丁寧さ
-            **スコア:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （会話の具体的な部分を引用し、何が良かったかを簡潔に説明）
-            *   **改善点:** （会話の具体的な部分を引用し、どのように改善できるかを簡潔に説明）
-
-            ---
-
-            ### 3. 会話の自然な流れ
-            **スコア:** XX/100
-            **フィードバック:**
-            *   **良かった点:** （会話の具体的な部分を引用し、何が良かったかを簡潔に説明）
-            *   **改善点:** （会話の具体的な部分を引用し、どのように改善できるかを簡潔に説明）
-        '''
-        # --- 要約プロンプト ---
-        summary_prompt = '''
-            あなたには、私が作成する「日本語学習者支援ゲーム」のシステムの一部である、**プレイヤーの言語的課題分析機能**を担当してもらいます。
-            あなたの役割は、以下の会話履歴を分析し、プレイヤーが日本語でのコミュニケーションにおいて抱えている「課題」を客観的に抽出することです。
-
-            【重要】分析のルール
-            *   プレイヤーの性格、気分、個性、意図などを**絶対に分析・記述してはいけません**。
-            *   抽出する情報は、**純粋に言語的・コミュニケーション戦略的な課題**に限定してください。
-            *   以下の観点に沿って、具体的な課題を簡潔な箇条書きで出力してください。
-
-            【分析の観点】
-            1.  **文法・語彙の誤り**: 助詞（は/が/を/に等）の間違い、動詞の活用ミス、不適切な単語の選択。
-            2.  **敬語・丁寧語のレベル**: 場面にそぐわない丁寧すぎる、または、くだけすぎた表現。
-            3.  **コミュニケーション戦略**: 質問への応答が不自然に短い/長い、話の展開が唐突、相手への配慮が欠けた直接的すぎる表現など。
-            4.  **会話の流れの阻害**: 文脈を無視した発言、会話の目的から逸脱した言動など。
-
-            以下の会話履歴を分析し、上記の観点から課題のみを箇条書きで出力してください。
-        '''
-        
-        conversation_log = "\n".join(st.session_state.chat_history)
-        client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-
-        # --- 評価を生成して表示・記録 ---
-        evaluation_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": evaluation_prompt},
-                {"role": "user", "content": conversation_log}
-            ],
-            temperature=0.25,
-        )
-        evaluation_result = evaluation_response.choices[0].message.content
-        st.markdown("### Conversation Evaluation")
-        st.markdown(evaluation_result)
-        now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\n')
-        record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
-
-        # --- 行動履歴の要約を生成して記録 ---
-        summary_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": summary_prompt},
-                {"role": "user", "content": conversation_log}
-            ],
-            temperature=0.25,
-        )
-        summary_result = summary_response.choices[0].message.content
-        # この要約は画面には表示せず、裏側で記録する
-        record_message(st.session_state.username, summary_result, 'player_summary')
-
+        run_post_game_analysis()
         # 「もう一度やる」ボタン
         if st.button("🔁 最初からやり直す"):
             st.session_state.chat_history = []
