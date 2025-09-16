@@ -282,7 +282,7 @@ def run_post_game_analysis():
                 msg_content = line.replace("ユーザー:", "").strip()
                 
                 # 添削フォーマットの正規表現: (文の前半)[正しい表現][間違った表現](文の後半) (理由)
-                match = re.search(r"^(.*)[\[](.+?)[\ своём][\ своё](.+?)[\ своё](.*?)\\s*\\((.+?)\\)\\s*$", msg_content)
+                match = re.search(r"^(.*)\[(.+?)\]\[(.+?)\](.*)（(.+?)）$", msg_content)
 
                 if match:
                     before, correct, wrong, after, reason = match.groups()
