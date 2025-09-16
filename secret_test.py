@@ -249,8 +249,7 @@ def run_post_game_analysis():
     conversation_log = "\n".join(st.session_state.chat_history)
     client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-    # --- 評価を生成して表示・記録 ---
-    # 評価のために、会話ログに「状況」のコンテキストを追加
+    # --- 評価を生成 ---
     scenario_title = st.session_state.style_label
     # chapter_descriptions はグローバルスコープにある想定
     scenario_description = chapter_descriptions.get(scenario_title, "")
@@ -265,8 +264,55 @@ def run_post_game_analysis():
         temperature=0.25,
     )
     evaluation_result = evaluation_response.choices[0].message.content
+
+    # --- 結果をパースして表示 ---
     st.markdown("### Conversation Evaluation")
-    st.markdown(evaluation_result)
+    try:
+        parts = evaluation_result.split('---', 1)
+        conversation_part = parts[0]
+        scores_part = parts[1] if len(parts) > 1 else ''
+
+        for line in conversation_part.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            
+            # ユーザーの発言
+            if line.startswith("ユーザー:"):
+                msg_content = line.replace("ユーザー:", "").strip()
+                st.markdown(
+                    f"""<div style='display: flex; justify-content: flex-end; margin: 4px 0'>
+                            <div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>
+                                {msg_content}
+                            </div>
+                        </div>""",
+                    unsafe_allow_html=True
+                )
+            # AIの発言
+            elif line.startswith("AI:"):
+                msg_content = line.replace("AI:", "").strip()
+                st.markdown(
+                    f"""<div style='display: flex; justify-content: flex-start; margin: 4px 0'>
+                            <div style='background-color: #E6E6EA; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>
+                                {msg_content}
+                            </div>
+                        </div>""",
+                    unsafe_allow_html=True
+                )
+            # プレフィックスがない行はそのまま表示
+            else:
+                st.markdown(line)
+
+        # スコアパートを表示
+        if scores_part:
+            st.markdown("---")
+            st.markdown(scores_part)
+
+    except Exception as e:
+        st.warning(f"評価結果の解析に失敗しました: {e}")
+        st.markdown(evaluation_result)
+
+    # --- 結果をDBに記録 ---
     now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\n')
     record_message(st.session_state.username, st.session_state["style_label"] + " " + now_str + evaluation_result, "eval")
 
@@ -280,7 +326,7 @@ def run_post_game_analysis():
         temperature=0.25,
     )
     summary_result = summary_response.choices[0].message.content
-    record_message(st.session_state.username, summary_result, 'player_summary')
+    record_message(st.session_state.username, summary_result, 'player_summary')'
 
 
 
