@@ -289,27 +289,40 @@ def run_post_game_analysis():
             if line.startswith("ユーザー:"):
                 msg_content = line.replace("ユーザー:", "").strip()
                 
-                # 添削フォーマットの正規表現: (文の前半)[正しい表現][間違った表現](文の後半) (理由)
-                match = re.search(r"^(.*)\[(.+?)\]\[(.+?)\](.*)（(.+?)）$", msg_content)
+                # 理由部分を先に抽出・分離する
+                reason_match = re.search(r"（(.+?)）$", msg_content)
+                reason = ""
+                if reason_match:
+                    reason = reason_match.group(1)
+                    msg_content = msg_content[:reason_match.start()].strip()
 
-                if match:
-                    before, correct, wrong, after, reason = match.groups()
+                # [正しい][間違い] のパターンが含まれているかチェック
+                if re.search(r"\[[^\]]+\]\[[^\]]+\]", msg_content):
                     
+                    # 修正前の行のHTMLを生成
+                    def create_wrong_html(match):
+                        return f"<span style='text-decoration: line-through;'>{match.group(2)}</span>"
+                    wrong_line_html = re.sub(r"\[([^\]]+)\]\[([^\]]+)\]", create_wrong_html, msg_content)
+
+                    # 修正後の行のHTMLを生成
+                    def create_correct_html(match):
+                        return f"<span style='color: #388e3c;'>{match.group(1)}</span>"
+                    correct_line_html = re.sub(r"\[([^\]]+)\]\[([^\]]+)\]", create_correct_html, msg_content)
+
                     # 表示用のHTMLを生成
-                    formatted_content = f"""
-                        <div style='text-align: left; width: 100%;'>
-                            <div style='margin-bottom: 5px; opacity: 0.7;'>
-                                {before}<span style='text-decoration: line-through;'>{wrong}</span>{after}
-                            </div>
-                            <div style='margin-bottom: 8px;'>
-                                {before}<span style='color: #388e3c;'>{correct}</span>{after}
-                            </div>
-                            <div style='padding: 8px; background-color: #f0f0f0; border-radius: 4px; font-size: 0.9em; color: #555;'>
-                                💡 {reason}
-                            </div>
-                        </div>
-                    """
-                    msg_content = formatted_content.strip()
+                    formatted_content = (
+                        "<div style='text-align: left; width: 100%;'>"
+                        f"<div style='margin-bottom: 5px; opacity: 0.7;'>{wrong_line_html}</div>"
+                        f"<div style='margin-bottom: 8px;'>{correct_line_html}</div>"
+                    )
+                    if reason:
+                        formatted_content += (
+                            f"<div style='padding: 8px; background-color: #f0f0f0; border-radius: 4px; font-size: 0.9em; color: #555;'>"
+                            f"💡 {reason}"
+                            "</div>"
+                        )
+                    formatted_content += "</div>"
+                    msg_content = formatted_content
 
                 st.markdown(
                     f"""<div style='display: flex; justify-content: flex-end; margin: 4px 0'>
