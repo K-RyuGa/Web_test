@@ -299,17 +299,17 @@ def run_post_game_analysis():
                     msg_content = msg_content[:reason_match.start()].strip()
 
                 # [正しい][間違い] のパターンが含まれているかチェック
-                if re.search(r"\[[^\]]+\]\[[^\]]+\]", msg_content):
+                if re.search(r"\\[^\\]+\\]\\[^\\]+\\]", msg_content):
                     
                     # 修正前の行のHTMLを生成
                     def create_wrong_html(match):
                         return f"<span style='text-decoration: line-through;'>{match.group(2)}</span>"
-                    wrong_line_html = re.sub(r"\[([^\]]+)\]\[([^\]]+)\]", create_wrong_html, msg_content)
+                    wrong_line_html = re.sub(r"\\[^\\]+\\]\\[^\\]+\\]", create_wrong_html, msg_content)
 
                     # 修正後の行のHTMLを生成
                     def create_correct_html(match):
                         return f"<span style='color: #388e3c;'>{match.group(1)}</span>"
-                    correct_line_html = re.sub(r"\[([^\]]+)\]\[([^\]]+)\]", create_correct_html, msg_content)
+                    correct_line_html = re.sub(r"\\[^\\]+\\]\\[^\\]+\\]", create_correct_html, msg_content)
 
                     # 表示用のHTMLを生成
                     formatted_content = (
@@ -327,22 +327,14 @@ def run_post_game_analysis():
                     msg_content = formatted_content
 
                 st.markdown(
-                    f"""<div style='display: flex; justify-content: flex-end; margin: 4px 0'>
-                            <div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>
-                                {msg_content}
-                            </div>
-                        </div>""",
+                    f"""<div style='display: flex; justify-content: flex-end; margin: 4px 0'>\n                            <div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>\n                                {msg_content}\n                            </div>\n                        </div>""",
                     unsafe_allow_html=True
                 )
             # AIの発言
             elif line.startswith("AI:"):
                 msg_content = line.replace("AI:", "").strip()
                 st.markdown(
-                    f"""<div style='display: flex; justify-content: flex-start; margin: 4px 0'>
-                            <div style='background-color: #E6E6EA; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>
-                                {msg_content}
-                            </div>
-                        </div>""",
+                    f"""<div style='display: flex; justify-content: flex-start; margin: 4px 0'>\n                            <div style='background-color: #E6E6EA; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>\n                                {msg_content}\n                            </div>\n                        </div>""",
                     unsafe_allow_html=True
                 )
             # プレフィックスがない行はそのまま表示
@@ -702,7 +694,7 @@ if st.session_state.logged_in:
     # --- 説明文定義 ---
     chapter_descriptions = {
         "Chapter 1: 空港での手続き": "ここは東京国際空港の到着ロビー。長旅の疲れを感じながらも、あなたは「到着」のゲートをくぐり抜けた。目の前には、きびきびと働く空港の係員が立っている。係員の案内に従ってパスポートを提示し、荷物の受け取り場所を理解しましょう.",
-        "Chapter 2: スーパーでの買い物": "あなたは近所のスーパーで、夕食の材料を選び終え、レジへと向かった。レジには、にこやかな表情の店員が立っている。店員の案内に従って会計を済ませ、支払い方法を尋ねられた際に丁寧に対応し、無事に会計を完了させましょう.",
+        "Chapter 2: スーパーでの買い物": "あなたはスーパーマーケットで買い物をしています。探している商品が見つからないか、何か聞きたいことがあるようです。近くにいる店員に声をかけて、目的の情報を得ましょう.",
         "Chapter 3: 友人との会話": "あなたは、最近知り合った友人とカフェで会っている。窓の外には公園の緑が広がり、店内には落ち着いた音楽が流れている。会話を楽しみ、次に会う約束を取り付けましょう.",
         "Chapter 4: 職場の自己紹介": "今日からあなたは新しい職場で働くことになった。オフィスに足を踏み入れると、一人の同僚があなたに気づき、笑顔で近づいてきた。相手に失礼なく、自分の名前を伝えて自己紹介を完了させましょう.",
         "Chapter 5: 病院での診察": "あなたは体調が悪く、近所の病院に来ている。待合室でしばらく待っていると、看護師に呼ばれ、診察室に入った。中では、白衣を着た医師があなたを待っている。自分の症状を正確に説明し、診察を無事に終えましょう.",
@@ -782,16 +774,7 @@ if st.session_state.logged_in:
                 st.markdown(
                     f"""
                     <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
-                        <div style='
-                            background-color: #DCF8C6;
-                            padding: 8px 12px;
-                            border-radius: 8px;
-                            max-width: 80%;
-                            word-wrap: break-word;
-                            text-align: left;
-                            font-size: 16px;
-                            color:black;
-                        '>
+                        <div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>
                             {msg.replace("ユーザー:", "")}
                         </div>
                     </div>
@@ -804,16 +787,7 @@ if st.session_state.logged_in:
                 st.markdown(
                     f"""
                     <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
-                        <div style='
-                            background-color: #E6E6EA;
-                            padding: 8px 12px;
-                            border-radius: 8px;
-                            max-width: 80%;
-                            word-wrap: break-word;
-                            text-align: left;
-                            font-size: 16px;
-                            color:black;
-                        '>
+                        <div style='background-color: #E6E6EA; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>
                             {msg.replace("AI:", "")}
                         </div>
                     </div>
@@ -950,16 +924,7 @@ if st.session_state.logged_in:
                                 st.markdown(
                                     f"""
                                     <div style='display: flex; justify-content: flex-end; margin: 4px 0'>
-                                        <div style='
-                                            background-color: #DCF8C6;
-                                            padding: 8px 12px;
-                                            border-radius: 8px;
-                                            max-width: 80%;
-                                            word-wrap: break-word;
-                                            text-align: left;
-                                            font-size: 16px;
-                                            color:black;
-                                        '>
+                                        <div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>
                                             {line.replace("ユーザー:", "")}
                                         </div>
                                     </div>
@@ -972,16 +937,7 @@ if st.session_state.logged_in:
                                 st.markdown(
                                     f"""
                                     <div style='display: flex; justify-content: flex-start; margin: 4px 0'>
-                                        <div style='
-                                            background-color: #E6E6EA;
-                                            padding: 8px 12px;
-                                            border-radius: 8px;
-                                            max-width: 80%;
-                                            word-wrap: break-word;
-                                            text-align: left;
-                                            font-size: 16px;
-                                            color:black;
-                                        '>
+                                        <div style='background-color: #E6E6EA; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>
                                             {line.replace("AI:", "")}
                                         </div>
                                     </div>
