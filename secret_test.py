@@ -611,6 +611,7 @@ if st.session_state.logged_in:
             st.session_state.chat_history = [] 
             st.session_state.first_session = True 
             st.session_state.clear_screen = False
+            st.session_state.Failed_screen = False # ミッション失敗状態をリセット
             
             if selected_style == "シチュエーション選択":
                 st.session_state.home = True
@@ -659,6 +660,7 @@ if st.session_state.logged_in:
                 st.session_state.home = True
                 st.session_state.chat = False
                 st.session_state.clear_screen = False
+                st.session_state.Failed_screen = False # ミッション失敗状態をリセット
                 st.session_state.style_label = "シチュエーション選択" # これが重要
                 st.rerun()
                 
