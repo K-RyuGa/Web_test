@@ -247,19 +247,16 @@ def display_evaluation_result(evaluation_result):
                     unsafe_allow_html=True
                 )
 
-            # AIの発言（半角／全角コロン対応）
-            elif re.match(r"^[AＡ][IＩ]\s*[:：]\s*", line):
-                msg_content = re.split(r"^[AＡ][IＩ]\s*[:：]\s*", line, maxsplit=1)[1]
+            elif re.search(r"[AＡ][IＩ]\s*[:：]", line):
+                msg_content = re.split(r"[AＡ][IＩ]\s*[:：]\s*", line, maxsplit=1)[1]
                 msg_html = html.escape(msg_content).replace("\n", "<br>")
                 st.markdown(
-                    "<div style='display:flex; justify-content:flex-start; margin:6px 0;'>"
-                    "<div style='background-color:#E6E6EA; padding:10px 14px; border-radius:8px; "
-                    "max-width:80%; word-wrap:break-word; text-align:left; font-size:15px; color:black;'>"
-                    f"{msg_html}"
-                    "</div></div>",
+                    f"<div style='display:flex; justify-content:flex-start; margin:6px 0;'>"
+                    f"<div style='background-color:#E6E6EA; padding:10px 14px; border-radius:8px; "
+                    f"max-width:80%; word-wrap:break-word; text-align:left; font-size:15px; color:black;'>"
+                    f"{msg_html}</div></div>",
                     unsafe_allow_html=True
                 )
-
             # プレフィックスがない行はそのまま（エスケープして表示）
             else:
                 st.markdown(html.escape(line).replace("\n", "<br>"), unsafe_allow_html=True)
