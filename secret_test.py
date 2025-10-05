@@ -201,32 +201,28 @@ def display_evaluation_result(evaluation_result):
                     msg_content = msg_content[:reason_match.start()].strip()
 
                 # [正しい][間違い] のパターンが含まれているかチェック
-                if re.search(r"\\[[^\\]+\\]\\[^\\]+\\]", msg_content):
-                    
+               if re.search(r"\[[^\]]+\]\[[^\]]+\]", msg_content):
+
                     # 修正前の行のHTMLを生成
                     def create_wrong_html(match):
                         return f"<span style='text-decoration: line-through;'>{match.group(2)}</span>"
-                    wrong_line_html = re.sub(r"\\[[^\\]+\\]\\[^\\]+\\]", create_wrong_html, msg_content)
+
+                    wrong_line_html = re.sub(
+                        r"\[([^\]]+)\]\[([^\]]+)\]",
+                        create_wrong_html,
+                        msg_content
+                    )
 
                     # 修正後の行のHTMLを生成
                     def create_correct_html(match):
                         return f"<span style='color: #388e3c;'>{match.group(1)}</span>"
-                    correct_line_html = re.sub(r"\\[[^\\]+\\]\\[^\\]+\\]", create_correct_html, msg_content)
 
-                    # 表示用のHTMLを生成
-                    formatted_content = (
-                        "<div style='text-align: left; width: 100%;'>"
-                        f"<div style='margin-bottom: 5px; opacity: 0.7;'>{wrong_line_html}</div>"
-                        f"<div style='margin-bottom: 8px;'>{correct_line_html}</div>"
+                    correct_line_html = re.sub(
+                        r"\[([^\]]+)\]\[([^\]]+)\]",
+                        create_correct_html,
+                        msg_content
                     )
-                    if reason:
-                        formatted_content += (
-                            f"<div style='padding: 8px; background-color: #f0f0f0; border-radius: 4px; font-size: 0.9em; color: #555;'>"
-                            f"💡 {reason}"
-                            "</div>"
-                        )
-                    formatted_content += "</div>"
-                    msg_content = formatted_content
+
 
                 st.markdown(
                     f"""<div style='display: flex; justify-content: flex-end; margin: 4px 0'>\n                            <div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>\n                                {msg_content}\n                            </div>\n                        </div>""",
