@@ -672,7 +672,8 @@ if st.session_state.logged_in:
                 st.session_state.chat = False
                 st.session_state.clear_screen = False
                 st.session_state.Failed_screen = False # ミッション失敗状態をリセット
-                st.session_state.style_label = "シチュエーション選択" # これが重要
+                st.session_state.style_label = "シチュエーション選択"
+                st.session_state.selectbox_style = "シチュエーション選択" # selectboxの状態も直接更新
                 st.rerun()
                 
         else:
