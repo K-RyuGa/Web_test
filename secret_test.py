@@ -178,66 +178,90 @@ def generate_hint(hint_type, user_input=None):
     return response.choices[0].message.content
 
 def display_evaluation_result(evaluation_result):
-    """評価結果のテキストを解析し、整形してStreamlitに表示する"""
+    """評価結果のテキストを解析し、整形してStreamlitに表示する（修正版）"""
     try:
         parts = evaluation_result.split('---', 1)
         conversation_part = parts[0]
         scores_part = parts[1] if len(parts) > 1 else ''
 
-        for line in conversation_part.strip().split('\n'):
+        # [正しい][間違い] のパターン（][ の間に任意の空白を許可）
+        pair_pattern = r"\[([^\]]+)\]\s*\[([^\]]+)\]"
+
+        for line in conversation_part.strip().splitlines():
             line = line.strip()
             if not line:
                 continue
-            
-            # ユーザーの発言
-            if line.startswith("ユーザー:"):
-                msg_content = line.replace("ユーザー:", "").strip()
-                
-                # 理由部分を先に抽出・分離する
-                reason_match = re.search(r"（(.+?)）$", msg_content)
+
+            # 「ユーザー:」または「ユーザー：」で始まる行
+            if re.match(r"^ユーザー[:：]", line):
+                # コロンの後ろを取り出す（半角・全角のどちらにも対応）
+                msg_content = re.split(r"^ユーザー[:：]\s*", line, maxsplit=1)[1]
+
+                # 末尾の理由（全角／半角の丸括弧）を分離
+                reason_match = re.search(r"[（(](.+?)[）)]\s*$", msg_content)
                 reason = ""
                 if reason_match:
-                    reason = reason_match.group(1)
+                    reason = reason_match.group(1).strip()
                     msg_content = msg_content[:reason_match.start()].strip()
 
-                # [正しい][間違い] のパターンが含まれているかチェック
-                if re.search(r"\[[^\]]+\]\[[^\]]+\]", msg_content):
+                # [正しい][間違い] のパターンがあるか
+                if re.search(pair_pattern, msg_content):
+                    # 取り消し線（誤り）を生成
+                    def make_wrong(m):
+                        return f"<span style='text-decoration: line-through;'>{m.group(2)}</span>"
 
-                    # 修正前の行のHTMLを生成
-                    def create_wrong_html(match):
-                        return f"<span style='text-decoration: line-through;'>{match.group(2)}</span>"
+                    # 修正（正しい表現）を生成
+                    def make_correct(m):
+                        return f"<span style='color: #0b6623;'>{m.group(1)}</span>"
 
-                    wrong_line_html = re.sub(
-                        r"\[([^\]]+)\]\[([^\]]+)\]",
-                        create_wrong_html,
-                        msg_content
+                    wrong_line_html = re.sub(pair_pattern, make_wrong, msg_content)
+                    correct_line_html = re.sub(pair_pattern, make_correct, msg_content)
+
+                    # 表示用HTMLを作成（理由はボックス表示、絵文字は使用しない）
+                    formatted = (
+                        "<div style='text-align:left; width:100%;'>"
+                        f"<div style='margin-bottom:6px; opacity:0.8;'>{wrong_line_html}</div>"
+                        f"<div style='margin-bottom:8px;'>{correct_line_html}</div>"
                     )
+                    if reason:
+                        formatted += (
+                            f"<div style='padding:8px; background-color:#f6f6f6; border-radius:4px; "
+                            f"font-size:0.9em; color:#555; margin-top:4px;'>"
+                            f"{html.escape(reason)}"
+                            "</div>"
+                        )
+                    formatted += "</div>"
+                    msg_html = formatted
+                else:
+                    # [] を含まない通常行：HTMLエスケープして改行を <br> に変換
+                    msg_html = html.escape(msg_content).replace("\n", "<br>")
 
-                    # 修正後の行のHTMLを生成
-                    def create_correct_html(match):
-                        return f"<span style='color: #388e3c;'>{match.group(1)}</span>"
-
-                    correct_line_html = re.sub(
-                        r"\[([^\]]+)\]\[([^\]]+)\]",
-                        create_correct_html,
-                        msg_content
-                    )
-
-
+                # ユーザーの吹き出し（右寄せ）
                 st.markdown(
-                    f"""<div style='display: flex; justify-content: flex-end; margin: 4px 0'>\n                            <div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>\n                                {msg_content}\n                            </div>\n                        </div>""",
+                    "<div style='display:flex; justify-content:flex-end; margin:6px 0;'>"
+                    "<div style='background-color:#DCF8C6; padding:10px 14px; border-radius:8px; "
+                    "max-width:80%; word-wrap:break-word; text-align:left; font-size:15px; color:black;'>"
+                    f"{msg_html}"
+                    "</div></div>",
                     unsafe_allow_html=True
                 )
-            # AIの発言
-            elif line.startswith("AI:"):
-                msg_content = line.replace("AI:", "").strip()
+
+            # AIの発言（半角／全角コロン対応）
+            elif re.match(r"^AI[:：]", line):
+                msg_content = re.split(r"^AI[:：]\s*", line, maxsplit=1)[1]
+                msg_html = html.escape(msg_content).replace("\n", "<br>")
                 st.markdown(
-                    f"""<div style='display: flex; justify-content: flex-start; margin: 4px 0'>\n                            <div style='background-color: #E6E6EA; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>\n                                {msg_content}\n                            </div>\n                        </div>""",
+                    "<div style='display:flex; justify-content:flex-start; margin:6px 0;'>"
+                    "<div style='background-color:#E6E6EA; padding:10px 14px; border-radius:8px; "
+                    "max-width:80%; word-wrap:break-word; text-align:left; font-size:15px; color:black;'>"
+                    f"{msg_html}"
+                    "</div></div>",
                     unsafe_allow_html=True
                 )
-            # プレフィックスがない行はそのまま表示
+
+            # プレフィックスがない行はそのまま（エスケープして表示）
             else:
-                st.markdown(line)
+                st.markdown(html.escape(line).replace("\n", "<br>"), unsafe_allow_html=True)
 
         # スコアパートを表示
         if scores_part:
