@@ -201,7 +201,7 @@ def display_evaluation_result(evaluation_result):
                     msg_content = msg_content[:reason_match.start()].strip()
 
                 # [正しい][間違い] のパターンが含まれているかチェック
-               if re.search(r"\[[^\]]+\]\[[^\]]+\]", msg_content):
+                if re.search(r"\[[^\]]+\]\[[^\]]+\]", msg_content):
 
                     # 修正前の行のHTMLを生成
                     def create_wrong_html(match):
