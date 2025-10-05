@@ -181,6 +181,7 @@ def generate_hint(hint_type, user_input=None):
 def display_evaluation_result(evaluation_result):
     """評価結果のテキストを解析し、整形してStreamlitに表示する（修正版）"""
     try:
+        st.write("🔍 evaluation_result の中身:", evaluation_result) 
         parts = evaluation_result.split('---', 1)
         conversation_part = parts[0]
         scores_part = parts[1] if len(parts) > 1 else ''
