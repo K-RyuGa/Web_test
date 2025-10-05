@@ -643,51 +643,34 @@ if st.session_state.logged_in:
         
         st.markdown("---")
 
-        # show_historyが未定義ならFalseで初期化
-        if "show_history" not in st.session_state:
-            st.session_state["show_history"] = False
-
-        # チャット中は「履歴を見る」ボタンを表示、履歴中は「戻る」ボタンを表示
-        if not st.session_state["show_history"]:
+        # ---- 画面遷移ボタン ----
+        # チャット中、またはゲーム終了後のみ、履歴/評価ボタンを表示
+        if st.session_state.chat or st.session_state.clear_screen or st.session_state.Failed_screen:
             if st.button("💬 会話履歴を確認"):
-                
-                st.session_state["show_history"] = True
-                st.session_state["home"] = False
-                st.session_state["logged_in"] = True
-                st.session_state["chat_history"] = []
-                st.session_state["clear_screen"] = False
-                st.session_state["chat"] = False
-                st.session_state["eval"] = False
-
-                
+                st.session_state.show_history = True
+                st.session_state.chat = False
+                st.session_state.clear_screen = False
+                st.session_state.Failed_screen = False
                 st.rerun()
-                
-        if not st.session_state["eval"]:
             if st.button("🎩 過去のフィードバック"):
-                st.session_state["show_history"] = False
-                st.session_state["home"] = False
-                st.session_state["logged_in"] = True
-                st.session_state["chat_history"] = []
-                st.session_state["clear_screen"] = False
-                st.session_state["chat"] = False
-                st.session_state["eval"] = True
-                
+                st.session_state.eval = True
+                st.session_state.chat = False
+                st.session_state.clear_screen = False
+                st.session_state.Failed_screen = False
                 st.rerun()
-                
 
-                
-        else:
-            if not st.session_state["home"]:
-                if st.button("🔙 Chatに戻る"):
-            
-                    st.session_state["show_history"] = False
-                    st.session_state["home"] = True
-                    st.session_state["logged_in"] = True
-                    st.session_state["chat_history"] = []
-                    st.session_state["clear_screen"] = False
-                    st.session_state["chat"] = False
-                    st.session_state["eval"] = False
-                    st.rerun()
+        # 履歴画面、または評価画面にいる場合は「ホームに戻る」ボタンを表示
+        if st.session_state.show_history or st.session_state.eval:
+            if st.button("🔙 ホームに戻る"):
+                st.session_state.show_history = False
+                st.session_state.eval = False
+                st.session_state.home = True
+                st.session_state.chat = False
+                st.session_state.style_label = "ホーム"
+                st.session_state.selectbox_style = "ホーム"
+                st.rerun()
+
+        st.markdown("---")
 
         # ログアウト
         if st.button("🚪 ログアウト"):
