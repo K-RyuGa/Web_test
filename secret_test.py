@@ -399,7 +399,10 @@ if not st.session_state.logged_in:
                 if register_user(username, password):
                     st.session_state.logged_in = True
                     st.session_state.username = username
+                    st.session_state.home = True
+                    st.session_state.chat = False
                     st.session_state.clear_screen = False
+                    st.session_state.Failed_screen = False
                     st.rerun()
                 else:
                     st.error("そのユーザー名は既に使われています。")
@@ -408,6 +411,10 @@ if not st.session_state.logged_in:
                     st.session_state.logged_in = True
                     st.session_state.username = username
                     st.session_state.chat_history = []
+                    st.session_state.home = True
+                    st.session_state.chat = False
+                    st.session_state.clear_screen = False
+                    st.session_state.Failed_screen = False
                     st.rerun()
                 else:
                     st.error("ユーザー名またはパスワードが間違っています。")
@@ -684,6 +691,7 @@ if st.session_state.logged_in:
             st.session_state["home"] = True
             st.session_state["logged_in"] = False
             st.session_state["clear_screen"] = False
+            st.session_state["Failed_screen"] = False
             st.session_state["chat"] = False
             st.session_state["first_session"] = True
             st.session_state["eval"] = False
