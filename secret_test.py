@@ -246,8 +246,8 @@ def display_evaluation_result(evaluation_result):
                     "</div></div>",
                     unsafe_allow_html=True
                 )
-
-            elif re.search(r"^\s*[AＡ][IＩ]\s*[:：]\s*", line):
+            else:
+            #elif re.search(r"^\s*[AＡ][IＩ]\s*[:：]\s*", line):
                 msg_content = re.split(r"^\s*[AＡ][IＩ]\s*[:：]\s*", line, maxsplit=1)[1]
                 msg_html = html.escape(msg_content).replace("\n", "<br>")
                 st.markdown(
@@ -259,8 +259,8 @@ def display_evaluation_result(evaluation_result):
                 )
 
             # プレフィックスがない行はそのまま（エスケープして表示）
-            else:
-                st.markdown(html.escape(line).replace("\n", "<br>"), unsafe_allow_html=True)
+            # else:
+            #     st.markdown(html.escape(line).replace("\n", "<br>"), unsafe_allow_html=True)
 
         # スコアパートを表示
         if scores_part:
