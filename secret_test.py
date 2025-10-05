@@ -379,7 +379,7 @@ st.session_state.setdefault("Failed_screen",False)
 st.session_state.setdefault("home",True)
 st.session_state.setdefault("chat",False)
 st.session_state.setdefault("first_session",True)
-st.session_state.setdefault("style_label", "シチュエーション選択") # 初期値を設定
+st.session_state.setdefault("style_label", "ホーム") # 初期値を設定
 st.session_state.setdefault("eval",False)
 st.session_state.setdefault("hint_mode", "chat") # ヒント機能のモード管理（chat, select, ask_word, show_hint）
 st.session_state.setdefault("hint_message", "") # 表示するヒントメッセージ
@@ -421,6 +421,23 @@ if not st.session_state.logged_in:
                             
 # --- ログイン後のUI ---
 if st.session_state.logged_in:
+    def on_selectbox_change():
+        # selectbox のキーから現在の選択値を取得し、style_label を更新
+        st.session_state.style_label = st.session_state.selectbox_style
+
+        # 状態のリセット
+        st.session_state.chat_history = [] 
+        st.session_state.first_session = True 
+        st.session_state.clear_screen = False
+        st.session_state.Failed_screen = False
+
+        # ホームかチャットかを判断
+        if st.session_state.style_label == "ホーム":
+            st.session_state.home = True
+            st.session_state.chat = False
+        else:
+            st.session_state.home = False
+            st.session_state.chat = True
     st.markdown("<h1 style='text-align: center;'>🗾 NihonGO❕</h1>", unsafe_allow_html=True)
     
     st.markdown(
@@ -590,7 +607,7 @@ if st.session_state.logged_in:
 
         # Game.pyのstoriesを元に、selectboxの選択肢を定義
         stories = [
-            "シチュエーション選択", # ホーム画面用
+            "ホーム", # ホーム画面用
             "Chapter 1: 空港での手続き",
             "Chapter 2: スーパーでの買い物",
             "Chapter 3: 友人との会話",
@@ -600,11 +617,10 @@ if st.session_state.logged_in:
             "Chapter 7: お祭りに参加",
             "Chapter 8: 市役所での手続き",
             "Chapter 9: 電車の遅延対応",
-            "ホームに戻る",
         ]
         
         # 1. 現在のセッションのスタイルを取得（これが基準となる）
-        current_style_in_session = st.session_state.get("style_label", "シチュエーション選択")
+        current_style_in_session = st.session_state.get("style_label", "ホーム")
 
         # 2. selectboxの現在のインデックスを計算
         try:
@@ -612,33 +628,14 @@ if st.session_state.logged_in:
         except ValueError:
             current_index = 0 # 万が一見つからない場合はデフォルト
 
-        # 3. セレクトボックスを描画し、ユーザーが選択した新しい値を取得
-        selected_style = st.selectbox("シチュエーション選択", stories, index=current_index, key="selectbox_style")
-
-        # 4. ユーザーの選択がセッションの状態と異なるかチェック
-        if selected_style != current_style_in_session:
-            # 「ホームに戻る」が選択された場合の特別な処理
-            if selected_style == "ホームに戻る":
-                st.session_state.home = True
-                st.session_state.chat = False
-                st.session_state.style_label = "シチュエーション選択"
-                st.session_state.selectbox_style = "シチュエーション選択"
-            else:
-                # 通常のシチュエーション変更処理
-                st.session_state.style_label = selected_style
-                st.session_state.chat_history = [] 
-                st.session_state.first_session = True 
-                st.session_state.clear_screen = False
-                st.session_state.Failed_screen = False
-
-                if selected_style == "シチュエーション選択":
-                    st.session_state.home = True
-                    st.session_state.chat = False
-                else:
-                    st.session_state.home = False
-                    st.session_state.chat = True
-            
-            st.rerun()
+        # 3. セレクトボックスを描画し、変更時にコールバックを呼び出す
+        st.selectbox(
+            "シチュエーション選択", 
+            stories, 
+            index=current_index, 
+            key="selectbox_style",
+            on_change=on_selectbox_change
+        )
         
         st.markdown("---")
 
@@ -702,7 +699,7 @@ if st.session_state.logged_in:
             st.session_state.username = ""
             #st.session_state["username"] = False
             st.session_state.chat_history = []
-            st.session_state["style_label"] = "シチュエーション選択"
+            st.session_state["style_label"] = "ホーム"
             st.rerun()
 
     if st.session_state["home"]:
