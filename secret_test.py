@@ -179,23 +179,22 @@ def generate_hint(hint_type, user_input=None):
     return response.choices[0].message.content
 
 def display_evaluation_result(evaluation_result):
-    """評価結果のテキストを解析し、整形してStreamlitに表示する（修正版）"""
+    """評価結果のテキストを解析し、整形してStreamlitに表示する（完全版）"""
     try:
         parts = evaluation_result.split('---', 1)
         conversation_part = parts[0]
         scores_part = parts[1] if len(parts) > 1 else ''
 
-        # [正しい][間違い] のパターン（][ の間に任意の空白を許可）
-        pair_pattern = r"\[([^\]]+)\]\s*\[([^\]]+)\]"
+        # [正しい][間違い] のパターン（どちらかが空でも対応）
+        pair_pattern = r"\[([^\]]*)\]\s*\[([^\]]*)\]"
 
         for line in conversation_part.strip().splitlines():
             line = line.strip()
             if not line:
                 continue
 
-            # 「ユーザー:」または「ユーザー：」で始まる行
+            # ユーザー発言
             if re.search(r"^ユーザー[:：]", line):
-                # コロンの後ろを取り出す（半角・全角のどちらにも対応）
                 msg_content = re.split(r"^ユーザー[:：]\s*", line, maxsplit=1)[1]
 
                 # 末尾の理由（全角／半角の丸括弧）を分離
@@ -205,20 +204,17 @@ def display_evaluation_result(evaluation_result):
                     reason = reason_match.group(1).strip()
                     msg_content = msg_content[:reason_match.start()].strip()
 
-                # [正しい][間違い] のパターンがあるか
+                # [正しい][誤り] パターンの処理
+                def make_correct(m):
+                    return f"<span style='color:#0b6623;'>{m.group(1)}</span>" if m.group(1) else ""
+
+                def make_wrong(m):
+                    return f"<span style='text-decoration:line-through;'>{m.group(2)}</span>" if m.group(2) else ""
+
                 if re.search(pair_pattern, msg_content):
-                    # 取り消し線（誤り）を生成
-                    def make_wrong(m):
-                        return f"<span style='text-decoration: line-through;'>{m.group(2)}</span>"
-
-                    # 修正（正しい表現）を生成
-                    def make_correct(m):
-                        return f"<span style='color: #0b6623;'>{m.group(1)}</span>"
-
                     wrong_line_html = re.sub(pair_pattern, make_wrong, msg_content)
                     correct_line_html = re.sub(pair_pattern, make_correct, msg_content)
 
-                    # 表示用HTMLを作成（理由はボックス表示、絵文字は使用しない）
                     formatted = (
                         "<div style='text-align:left; width:100%;'>"
                         f"<div style='margin-bottom:6px; opacity:0.8;'>{wrong_line_html}</div>"
@@ -234,7 +230,6 @@ def display_evaluation_result(evaluation_result):
                     formatted += "</div>"
                     msg_html = formatted
                 else:
-                    # [] を含まない通常行：HTMLエスケープして改行を <br> に変換
                     msg_html = html.escape(msg_content).replace("\n", "<br>")
 
                 # ユーザーの吹き出し（右寄せ）
@@ -242,12 +237,12 @@ def display_evaluation_result(evaluation_result):
                     "<div style='display:flex; justify-content:flex-end; margin:6px 0;'>"
                     "<div style='background-color:#DCF8C6; padding:10px 14px; border-radius:8px; "
                     "max-width:80%; word-wrap:break-word; text-align:left; font-size:15px; color:black;'>"
-                    f"{msg_html}"
-                    "</div></div>",
+                    f"{msg_html}</div></div>",
                     unsafe_allow_html=True
                 )
-            else:
-            #elif re.search(r"^\s*[AＡ][IＩ]\s*[:：]\s*", line):
+
+            # AI発言
+            elif re.search(r"^\s*[AＡ][IＩ]\s*[:：]", line):
                 msg_content = re.split(r"^\s*[AＡ][IＩ]\s*[:：]\s*", line, maxsplit=1)[1]
                 msg_html = html.escape(msg_content).replace("\n", "<br>")
                 st.markdown(
@@ -258,9 +253,9 @@ def display_evaluation_result(evaluation_result):
                     unsafe_allow_html=True
                 )
 
-            # プレフィックスがない行はそのまま（エスケープして表示）
-            # else:
-            #     st.markdown(html.escape(line).replace("\n", "<br>"), unsafe_allow_html=True)
+            # プレフィックスなしの行
+            else:
+                st.markdown(html.escape(line).replace("\n", "<br>"), unsafe_allow_html=True)
 
         # スコアパートを表示
         if scores_part:
