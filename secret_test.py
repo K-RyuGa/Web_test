@@ -600,6 +600,7 @@ if st.session_state.logged_in:
             "Chapter 7: お祭りに参加",
             "Chapter 8: 市役所での手続き",
             "Chapter 9: 電車の遅延対応",
+            "ホームに戻る",
         ]
         
         # 1. 現在のセッションのスタイルを取得（これが基準となる）
@@ -616,20 +617,26 @@ if st.session_state.logged_in:
 
         # 4. ユーザーの選択がセッションの状態と異なるかチェック
         if selected_style != current_style_in_session:
-            # 変更があった場合、セッションの状態を更新・リセットする
-            st.session_state.style_label = selected_style
-            
-            st.session_state.chat_history = [] 
-            st.session_state.first_session = True 
-            st.session_state.clear_screen = False
-            st.session_state.Failed_screen = False # ミッション失敗状態をリセット
-            
-            if selected_style == "シチュエーション選択":
+            # 「ホームに戻る」が選択された場合の特別な処理
+            if selected_style == "ホームに戻る":
                 st.session_state.home = True
                 st.session_state.chat = False
+                st.session_state.style_label = "シチュエーション選択"
+                st.session_state.selectbox_style = "シチュエーション選択"
             else:
-                st.session_state.home = False
-                st.session_state.chat = True
+                # 通常のシチュエーション変更処理
+                st.session_state.style_label = selected_style
+                st.session_state.chat_history = [] 
+                st.session_state.first_session = True 
+                st.session_state.clear_screen = False
+                st.session_state.Failed_screen = False
+
+                if selected_style == "シチュエーション選択":
+                    st.session_state.home = True
+                    st.session_state.chat = False
+                else:
+                    st.session_state.home = False
+                    st.session_state.chat = True
             
             st.rerun()
         
@@ -666,15 +673,7 @@ if st.session_state.logged_in:
                 
                 st.rerun()
                 
-        if not st.session_state["style_label"] == "シチュエーション選択" and not st.session_state["show_history"] and not st.session_state["eval"]:
-            if st.button("🔙 Homeに戻る"):
-                st.session_state.home = True
-                st.session_state.chat = False
-                st.session_state.clear_screen = False
-                st.session_state.Failed_screen = False # ミッション失敗状態をリセット
-                st.session_state.style_label = "シチュエーション選択"
-                st.session_state.selectbox_style = "シチュエーション選択" # selectboxの状態も直接更新
-                st.rerun()
+
                 
         else:
             if not st.session_state["home"]:
