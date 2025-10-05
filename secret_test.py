@@ -6,6 +6,7 @@ from google.oauth2.service_account import Credentials
 import time
 import re
 from datetime import datetime, timezone, timedelta
+import html
 
 # --- 日本時間(JST)設定 ---
 JST = timezone(timedelta(hours=+9), 'JST')
