@@ -247,7 +247,7 @@ def display_evaluation_result(evaluation_result):
                     unsafe_allow_html=True
                 )
 
-            elif re.match(r"^\s*[AＡ][IＩ]\s*[:：]\s*", line):
+            elif re.search(r"^\s*[AＡ][IＩ]\s*[:：]\s*", line):
                 msg_content = re.split(r"^\s*[AＡ][IＩ]\s*[:：]\s*", line, maxsplit=1)[1]
                 msg_html = html.escape(msg_content).replace("\n", "<br>")
                 st.markdown(
