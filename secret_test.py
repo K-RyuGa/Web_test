@@ -177,6 +177,81 @@ def generate_hint(hint_type, user_input=None):
     )
     return response.choices[0].message.content
 
+def display_evaluation_result(evaluation_result):
+    """評価結果のテキストを解析し、整形してStreamlitに表示する"""
+    try:
+        parts = evaluation_result.split('---', 1)
+        conversation_part = parts[0]
+        scores_part = parts[1] if len(parts) > 1 else ''
+
+        for line in conversation_part.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            
+            # ユーザーの発言
+            if line.startswith("ユーザー:"):
+                msg_content = line.replace("ユーザー:", "").strip()
+                
+                # 理由部分を先に抽出・分離する
+                reason_match = re.search(r"（(.+?)）$", msg_content)
+                reason = ""
+                if reason_match:
+                    reason = reason_match.group(1)
+                    msg_content = msg_content[:reason_match.start()].strip()
+
+                # [正しい][間違い] のパターンが含まれているかチェック
+                if re.search(r"\\[[^\\]+\\]\\[^\\]+\\]", msg_content):
+                    
+                    # 修正前の行のHTMLを生成
+                    def create_wrong_html(match):
+                        return f"<span style='text-decoration: line-through;'>{match.group(2)}</span>"
+                    wrong_line_html = re.sub(r"\\[[^\\]+\\]\\[^\\]+\\]", create_wrong_html, msg_content)
+
+                    # 修正後の行のHTMLを生成
+                    def create_correct_html(match):
+                        return f"<span style='color: #388e3c;'>{match.group(1)}</span>"
+                    correct_line_html = re.sub(r"\\[[^\\]+\\]\\[^\\]+\\]", create_correct_html, msg_content)
+
+                    # 表示用のHTMLを生成
+                    formatted_content = (
+                        "<div style='text-align: left; width: 100%;'>"
+                        f"<div style='margin-bottom: 5px; opacity: 0.7;'>{wrong_line_html}</div>"
+                        f"<div style='margin-bottom: 8px;'>{correct_line_html}</div>"
+                    )
+                    if reason:
+                        formatted_content += (
+                            f"<div style='padding: 8px; background-color: #f0f0f0; border-radius: 4px; font-size: 0.9em; color: #555;'>"
+                            f"💡 {reason}"
+                            "</div>"
+                        )
+                    formatted_content += "</div>"
+                    msg_content = formatted_content
+
+                st.markdown(
+                    f"""<div style='display: flex; justify-content: flex-end; margin: 4px 0'>\n                            <div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>\n                                {msg_content}\n                            </div>\n                        </div>""",
+                    unsafe_allow_html=True
+                )
+            # AIの発言
+            elif line.startswith("AI:"):
+                msg_content = line.replace("AI:", "").strip()
+                st.markdown(
+                    f"""<div style='display: flex; justify-content: flex-start; margin: 4px 0'>\n                            <div style='background-color: #E6E6EA; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>\n                                {msg_content}\n                            </div>\n                        </div>""",
+                    unsafe_allow_html=True
+                )
+            # プレフィックスがない行はそのまま表示
+            else:
+                st.markdown(line)
+
+        # スコアパートを表示
+        if scores_part:
+            st.markdown("---")
+            st.markdown(scores_part)
+
+    except Exception as e:
+        st.warning(f"評価結果の解析に失敗しました: {e}")
+        st.markdown(evaluation_result)
+
 # --- 評価＆要約実行関数 ---
 def run_post_game_analysis():
     evaluation_prompt = '''あなたは、日本語学習者の会話ログを分析・評価する高性能なAIシステムです。
@@ -277,78 +352,7 @@ def run_post_game_analysis():
 
     # --- 結果をパースして表示 ---
     st.markdown("### Conversation Evaluation")
-    try:
-        parts = evaluation_result.split('---', 1)
-        conversation_part = parts[0]
-        scores_part = parts[1] if len(parts) > 1 else ''
-
-        for line in conversation_part.strip().split('\n'):
-            line = line.strip()
-            if not line:
-                continue
-            
-            # ユーザーの発言
-            if line.startswith("ユーザー:"):
-                msg_content = line.replace("ユーザー:", "").strip()
-                
-                # 理由部分を先に抽出・分離する
-                reason_match = re.search(r"（(.+?)）$", msg_content)
-                reason = ""
-                if reason_match:
-                    reason = reason_match.group(1)
-                    msg_content = msg_content[:reason_match.start()].strip()
-
-                # [正しい][間違い] のパターンが含まれているかチェック
-                if re.search(r"\\[^\\]+\\]\\[^\\]+\\]", msg_content):
-                    
-                    # 修正前の行のHTMLを生成
-                    def create_wrong_html(match):
-                        return f"<span style='text-decoration: line-through;'>{match.group(2)}</span>"
-                    wrong_line_html = re.sub(r"\\[^\\]+\\]\\[^\\]+\\]", create_wrong_html, msg_content)
-
-                    # 修正後の行のHTMLを生成
-                    def create_correct_html(match):
-                        return f"<span style='color: #388e3c;'>{match.group(1)}</span>"
-                    correct_line_html = re.sub(r"\\[^\\]+\\]\\[^\\]+\\]", create_correct_html, msg_content)
-
-                    # 表示用のHTMLを生成
-                    formatted_content = (
-                        "<div style='text-align: left; width: 100%;'>"
-                        f"<div style='margin-bottom: 5px; opacity: 0.7;'>{wrong_line_html}</div>"
-                        f"<div style='margin-bottom: 8px;'>{correct_line_html}</div>"
-                    )
-                    if reason:
-                        formatted_content += (
-                            f"<div style='padding: 8px; background-color: #f0f0f0; border-radius: 4px; font-size: 0.9em; color: #555;'>"
-                            f"💡 {reason}"
-                            "</div>"
-                        )
-                    formatted_content += "</div>"
-                    msg_content = formatted_content
-
-                st.markdown(
-                    f"""<div style='display: flex; justify-content: flex-end; margin: 4px 0'>\n                            <div style='background-color: #DCF8C6; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>\n                                {msg_content}\n                            </div>\n                        </div>""",
-                    unsafe_allow_html=True
-                )
-            # AIの発言
-            elif line.startswith("AI:"):
-                msg_content = line.replace("AI:", "").strip()
-                st.markdown(
-                    f"""<div style='display: flex; justify-content: flex-start; margin: 4px 0'>\n                            <div style='background-color: #E6E6EA; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; text-align: left; font-size: 16px; color:black;'>\n                                {msg_content}\n                            </div>\n                        </div>""",
-                    unsafe_allow_html=True
-                )
-            # プレフィックスがない行はそのまま表示
-            else:
-                st.markdown(line)
-
-        # スコアパートを表示
-        if scores_part:
-            st.markdown("---")
-            st.markdown(scores_part)
-
-    except Exception as e:
-        st.warning(f"評価結果の解析に失敗しました: {e}")
-        st.markdown(evaluation_result)
+    display_evaluation_result(evaluation_result)
 
     # --- 結果をDBに記録 ---
     now_str = datetime.now(JST).strftime('%Y/%m/%d %H:%M\n')
@@ -1007,10 +1011,7 @@ if st.session_state.logged_in:
                 # 表示（タイトルは非表示）
                 st.markdown("### フィードバック内容")
                 selected_body = feedback_dict[selected_title]
-
-                # パラグラフごとに分けて表示（2重改行で段落分割）
-                for para in selected_body.split("\n\n"):
-                    st.markdown(para.strip())
+                display_evaluation_result(selected_body)
     
     elif st.session_state.Failed_screen:
         st.error("ミッション失敗...")
