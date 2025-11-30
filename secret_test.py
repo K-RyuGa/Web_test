@@ -266,6 +266,53 @@ def display_evaluation_result(evaluation_result):
         st.warning(f"評価結果の解析に失敗しました: {e}")
         st.markdown(evaluation_result)
 
+# --- 監視エージェントによるミッション達成判定 ---
+def check_mission_status(conversation_log, agent_prompt):
+    """
+    会話ログとエージェントプロンプトを基に、第三者の視点からミッションの達成状況を判定する。
+    応答速度を優先し、「達成」または「継続」のみを返す。
+    """
+    checker_prompt = f"""
+        あなたは日本語学習ゲームの「審判」です。
+        あなたの唯一の役割は、与えられた[ゲームのルール]と[会話の履歴]を分析し、プレイヤーがミッションを達成したかどうかを判定することです。
+
+        [ゲームのルール]
+        {agent_prompt}
+
+        [会話の履歴]
+        {conversation_log}
+
+        [判定ルール]
+        - [ゲームのルール]に記載の「ミッション達成の条件」が、[会話の履歴]の中で明確に満たされているかを評価してください。
+        - 条件が満たされていると判断した場合、**「達成」** という単語だけを出力してください。
+        - それ以外の場合は、**「継続」** という単語だけを出力してください。
+        - あなたの出力はプログラムで自動処理されるため、「達成」「継続」以外のいかなる文字（挨拶、説明、句読点など）も絶対に出力してはいけません。
+    """
+
+    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo", # 応答速度を優先
+            messages=[
+                {"role": "system", "content": checker_prompt}
+            ],
+            temperature=0, # 判定の安定性を高める
+            max_tokens=5 # 「達成」または「継続」の出力に十分なトークン数
+        )
+        result = response.choices[0].message.content.strip()
+        
+        # 「達成」という文字が含まれていれば「達成」と判断
+        if "達成" in result:
+            return "達成"
+        else:
+            return "継続"
+            
+    except Exception:
+        # APIエラーなどが発生した場合でもゲームを止めないよう、安全策として「継続」を返す
+        return "継続"
+
+
 # --- 評価＆要約実行関数 ---
 def run_post_game_analysis():
     evaluation_prompt = '''あなたは、日本語学習者の会話ログを分析・評価する高性能なAIシステムです。
@@ -923,26 +970,44 @@ if st.session_state.logged_in:
                 # (既存の送信処理)
                 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
                 system_prompt = st.session_state.get("agent_prompt", "あなたは親切な日本語学習の先生です。")
+                
+                # 履歴を準備
                 messages = [{"role": "system", "content": system_prompt}]
                 for msg in st.session_state.get("chat_history", []):
                     if msg.startswith("ユーザー:"):
                         messages.append({"role": "user", "content": msg.replace("ユーザー:", "").strip()})
                     elif msg.startswith("AI:"):
                         messages.append({"role": "assistant", "content": msg.replace("AI:", "").strip()})
+                
+                # 今回のユーザー入力を追加
                 messages.append({"role": "user", "content": user_input})
+                
+                # 会話AIからの応答を取得
                 response = client.chat.completions.create(model="gpt-4o", messages=messages, temperature=0.25)
                 reply = response.choices[0].message.content
+                
+                # 会話履歴を更新
                 st.session_state.chat_history.append(f"ユーザー: {user_input}")
                 st.session_state.chat_history.append(f"AI: {reply}")
+
+                # DBに会話を記録
                 full_message = f"ユーザー: {user_input}\nAI: {reply}"
                 record_message(st.session_state.username, full_message,"message")
                 
-                if "ミッション達成" in reply:
+                # --- ミッション達成判定 ---
+                # 1. 監視エージェントによる判定
+                conversation_log_for_check = "\n".join(st.session_state.chat_history)
+                agent_prompt_for_check = st.session_state.get("agent_prompt", "")
+                status_check_result = check_mission_status(conversation_log_for_check, agent_prompt_for_check)
+
+                # 2. 会話AIの応答と監視エージェントの判定結果を総合的に判断
+                if "ミッション達成" in reply or status_check_result == "達成":
                     st.session_state.clear_screen = True
                     st.session_state.chat = False
-                elif "ミッション失敗" in reply:
+                elif "ミッション失敗" in reply: # 会話AIが明示的に失敗を宣言した場合
                     st.session_state.Failed_screen = True
                     st.session_state.chat = False
+                
                 st.rerun()
             
             

@@ -1,6 +1,7 @@
 import os
 from openai import OpenAI
 import re
+import csv
 import time
 
 # --- 初期設定 ---
@@ -40,6 +41,29 @@ def evaluation_with_gpt(messages):
         temperature=0
     )
     return completion.choices[0].message.content
+
+def extract_scores(evaluation_text):
+    """
+    評価テキストから3つのスコア（文法、表現の自然さ、論理性）と平均点を抽出する。
+    """
+    # マークダウンの太字(**)を削除して、揺れを吸収しやすくする
+    cleaned_text = evaluation_text.replace('**', '')
+    
+    # コロンは全角・半角の両方を許容し、スペースの有無も考慮する
+    scores = re.findall(r"スコア\s*[:：]\s*(\d{1,3})/100", cleaned_text)
+    
+    if len(scores) == 3:
+        try:
+            grammar = int(scores[0])
+            naturalness = int(scores[1])
+            logic = int(scores[2])
+            average = (grammar + naturalness + logic) / 3
+            return grammar, naturalness, logic, f"{average:.2f}"
+        except (ValueError, IndexError):
+            # スコアの変換に失敗した場合
+            return 0, 0, 0, "0.00"
+    # スコアが3つ見つからなかった場合
+    return 0, 0, 0, "0.00"
 
 # --- プロンプト定義 (test_Game.py の初期バージョン) ---
 player_demo_prompt = """
@@ -230,17 +254,19 @@ story_prompt = [
 ]
 
 # --- ペルソナ定義 (A-Jのすべてを移植) ---
-personas_common_intro = [
-    "A：観光客\t日本語初級、初めての日本旅行\t初対面の人に自己紹介をし、相手の質問に答える",
-    "B：交換留学生\t日本語中級、3か月滞在\t初対面の人に自己紹介をし、相手の質問に答える",
-    "C：育児中の技能実習生\t日本語初級、日本で出産・子育て中\t初対面の人に自己紹介をし、相手の質問に答える",
-    "D：宗教上の理由で肉を避ける人\t日本語中級、宗教上の理由で肉を食べない\t初対面の人に自己紹介をし、相手の質問に答える",
-    "E：節約中の大学院生\t日本語中級、日本で数年生活\t初対面の人に自己紹介をし、相手の質問に答える",
-    "F：健康志向のビジネスマン\t日本語中級、平日は仕事で忙しい\t初対面の人に自己紹介をし、相手の質問に答える",
-    "G：アレルギーを持つ子どもの親\t日本語初級、来日半年以内\t初対面の人に自己紹介をし、相手の質問に答える",
-    "H：料理が趣味の外国人主婦\t日本語上級、日本人の配偶者あり\t初対面の人に自己紹介をし、相手の質問に答える",
-    "I：短期滞在の語学研修生\t日本語初級、滞在1ヶ月\t初対面の人に自己紹介をし、相手の質問に答える",
-    "J：夜勤明けの介護職員\t日本語中級、生活が不規則\t初対面の人に自己紹介をし、相手の質問に答える"
+
+
+personas_chapter1 = [
+    "A：観光客\t日本語初級、初めての日本旅行\t空港で入国手続きをしている\t空港係員の指示に従い、パスポートを提示して入国手続きを完了する",
+    "B：交換留学生\t日本語中級、3か月滞在\t空港で入国手続きをしている\t空港係員の質問に正確に答え、スムーズに入国手続きを完了する",
+    "C：育児中の技能実習生\t日本語初級、日本で出産・子育て中\t空港で入国手続きをしている\t赤ちゃん連れであることを伝え、必要な手続きやサポートについて尋ねる",
+    "D：宗教上の理由で肉を避ける人\t日本語中級、宗教上の理由で肉を食べない\t空港で入国手続きをしている\t入国カードの記入で不明な点を質問し、スムーズに入国手続きを完了する",
+    "E：節約中の大学院生\t日本語中級、日本で数年生活\t空港で入国手続きをしている\t入国手続きの質問に簡潔に答え、早く手続きを終えたい",
+    "F：健康志向のビジネスマン\t日本語中級、平日は仕事で忙しい\t空港で入国手続きをしている\t健康状態に関する質問に正確に答え、迅速に入国手続きを完了する",
+    "G：アレルギーを持つ子どもの親\t日本語初級、来日半年以内\t空港で入国手続きをしている\t子どものアレルギーについて伝え、緊急時の対応について尋ねる",
+    "H：料理が趣味の外国人主婦\t日本語上級、日本人の配偶者あり\t空港で入国手続きをしている\t入国手続きの質問に流暢に答え、日本の生活について少し世間話をする",
+    "I：短期滞在の語学研修生\t日本語初級、滞在1ヶ月\t空港で入国手続きをしている\t入国手続きの質問を理解しようと努め、必要に応じて助けを求める",
+    "J：夜勤明けの介護職員\t日本語中級、生活が不規則\t空港で入国手続きをしている\t疲れているが、入国手続きの質問に正確に答え、早く休憩したい"
 ]
 
 personas_chapter2 = [
@@ -252,121 +278,131 @@ personas_chapter2 = [
     "F：健康志向のビジネスマン\t日本語中級、平日は仕事で忙しい\t糖質オフの商品を探している\t成分や栄養表示を確認しながら、店員におすすめを聞く",
     "G：アレルギーを持つ子どもの親\t日本語初級、来日半年以内\tアレルギー対応の食品を探している\t店員に成分を丁寧に聞き、安心して選びたい",
     "H：料理が趣味の外国人主婦\t日本語上級、日本人の配偶者あり\t特定の調味料や旬の野菜を探している\t商品の使い方やおすすめレシピを店員に尋ねる",
-    "I：短期滞在の語学研修生\t日本語初級、滞在1ヶ月\tコンビニで手軽に食べられる物を探している\t商品名がわからず、ジェスチャーや英単語を交えて伝える",
+    "I：短期滞在の語学研修生\t日本語初級、滞在1ヶ月\tコンビニで手軽に食べられる物を探している\t商品名がわからず、英単語を交えて伝える",
     "J：夜勤明けの介護職員\t日本語中級、生活が不規則\t簡単に食べられる健康的な食事を探している\tレジ前での時短・効率を重視した会話、疲れ気味の応答"
 ]
 
+personas_chapter3 = [
+    "A：観光客\t日本語初級、初めての日本旅行\t新しくできた友人とカフェで話している\t自分の国の趣味や、日本での観光予定について簡単な単語で話す",
+    "B：交換留学生\t日本語中級、3か月滞在\t新しくできた友人とカフェで話している\t大学のサークル活動や、週末に計画している小旅行について話す",
+    "C：育児中の技能実習生\t日本語初級、日本で出産・子育て中\t新しくできた友人とカフェで話している\t子育ての合間の息抜きや、子どもと行ける場所について話す",
+    "D：宗教上の理由で肉を避ける人\t日本語中級、宗教上の理由で肉を食べない\t新しくできた友人とカフェで話している\t食事ができる場所探しや、文化的なイベントへの興味について話す",
+    "E：節約中の大学院生\t日本語中級、日本で数年生活\t新しくできた友人とカフェで話している\tお金のかからない趣味（図書館、公園など）や、研究の進捗について話す",
+    "F：健康志向のビジネスマン\t日本語中級、平日は仕事で忙しい\t新しくできた友人とカフェで話している\t週末のジム通いや、健康的な食事に関する情報交換をしようと試みる",
+    "G：アレルギーを持つ子どもの親\t日本語初級、来日半年以内\t新しくできた友人とカフェで話している\t子どものアレルギーについて説明し、安心して遊べる場所について情報を求める",
+    "H：料理が趣味の外国人主婦\t日本語上級、日本人の配偶者あり\t新しくできた友人とカフェで話している\t最近作った料理や、新しく挑戦したいレシピ、おすすめの食材店について流暢に話す",
+    "I：短期滞在の語学研修生\t日本語初級、滞在1ヶ月\t新しくできた友人とカフェで話している\t限られた滞在期間でやりたいこと（観光、買い物など）を、辞書を使いながら一生懸命話す",
+    "J：夜勤明けの介護職員\t日本語中級、生活が不規則\t新しくできた友人とカフェで話している\t不規則なシフトの中での休日の過ごし方や、ストレス解消法について話す"
+]
+
 def run_evaluation():
-    CHAPTER_TO_TEST = 2
     ITERATION_COUNT = 5
     TURN_LIMIT = 30 # 会話のターン数上限
-    
-    selected_story_prompt = story_prompt[CHAPTER_TO_TEST - 1][0]
 
-    for i, persona_desc in enumerate(personas_chapter2):
-        persona_id = persona_desc.split('：')[0]
-        common_intro_desc = personas_common_intro[i]
+    # --- スコア集計用CSVファイルの準備 ---
+    summary_file_path = os.path.join(output_dir, "score_summary.csv")
+    # ファイルが存在しない場合、ヘッダーを書き込む
+    if not os.path.exists(summary_file_path):
+        with open(summary_file_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['Persona', 'Chapter', 'Iteration', 'Grammar_Score', 'Naturalness_Score', 'Logic_Score', 'Average_Score'])
+
+    # --- テスト対象のペルソナとシチュエーションの組み合わせを定義 ---
+    # まずはペルソナAで、シチュエーション1, 2, 3をテスト
+    # 全ペルソナに対してシチュエーション1, 2, 3を実行
+    ALL_PERSONAS = [chr(ord('A') + i) for i in range(len(personas_chapter1))]
+    PERSONA_SITUATIONS_TO_TEST = {p: [1, 2, 3] for p in ALL_PERSONAS}
+    # 将来的に全ペルソナ・全シチュエーションでテストする場合は、以下のようにコメントアウトを解除・編集してください。
+    # PERSONAS = [chr(ord('A') + i) for i in range(len(personas_common_intro))]
+    # CHAPTERS = list(range(1, len(story_prompt) + 1))
+    # PERSONA_SITUATIONS_TO_TEST = {p: CHAPTERS for p in PERSONAS}
+
+    # ペルソナ定義を章ごとにまとめる (story_promptのインデックスと合わせる)
+    all_persona_chapters = [
+        personas_chapter1,     # Chapter 1
+        personas_chapter2,     # Chapter 2
+        personas_chapter3,     # Chapter 3
+        # NOTE: Chapter 4以降のペルソナ定義(personas_chapter4など)を追加すれば、自動的にテスト対象に含められます。
+    ]
+
+    # --- メインループ: ペルソナごと、シチュエーションごとにテストを実行 ---
+    for persona_id, chapters_to_test in PERSONA_SITUATIONS_TO_TEST.items():
         print(f"--- ペルソナ '{persona_id}' のテストを開始 ---")
-
-        # [事前評価]
-        print("\n[ステップ1/3: 事前評価]")
-        pre_eval_prompt = base_prompt + "今回はプレイヤーの自己紹介を聞いていくつか質問をしてください。質問は3つで、趣味、特技、好きな言葉について聞いてください。自己紹介中に先に述べられていた内容については追加で聞く必要はありません。3つの質問に答えられたら「ミッション達成」とすぐに出力してください。" + end_prompt
-        messages1 = [{"role": "system", "content": pre_eval_prompt}]
-        messages2 = [{"role": "system", "content": player_demo_prompt + common_intro_desc + "それでは、自己紹介を始めてください。会話相手は私が担当します。"}]
-        memory = ""
-        cnt = 0
-        while True:
-            if cnt >= TURN_LIMIT: 
-                print(f"会話が{TURN_LIMIT}ターンに達したため、強制的に終了します。")
-                break
-            response2 = demo_play(messages2)
-            print(f"仮想プレイヤー: {response2}\n")
-            messages1.append({"role": "user", "content": response2})
-            messages2.append({"role": "assistant", "content": response2})
-            response1 = chat_with_gpt(messages1)
-            print(f"会話用エージェント: {response1}\n")
-            if "ミッション達成" in response1 or "ミッション失敗" in response1:
-                print("ミッションが終了しました。評価に移行します。")
-                break
-            messages1.append({"role": "assistant", "content": response1})
-            messages2.append({"role": "user", "content": response1})
-            memory += f"プレイヤー：{response2}\nエージェント：{response1}\n"
-            cnt += 1
         
-        eval_content = evaluation_prompt + f"\n**[評価対象の会話ログ]**\n{memory}"
-        response_eval = evaluation_with_gpt([{"role": "system", "content": eval_content}])
-        with open(os.path.join(output_dir, f"{persona_id}_pre_evaluation.txt"), "w", encoding="utf-8") as f:
-            f.write(response_eval)
-        print("事前評価が完了しました。")
+        # ペルソナID ('A') からリストのインデックス (0) を取得
+        try:
+            persona_index = ord(persona_id) - ord('A')
+        except TypeError:
+            print(f"エラー: ペルソナID '{persona_id}' が不正です。スキップします。")
+            continue
 
-        # [反復訓練]
-        print(f"\n[ステップ2/3: 反復訓練 ({ITERATION_COUNT}回)]")
-        messages2_training = [{"role": "system", "content": player_demo_prompt + persona_desc + "それでは、会話を始めてください。会話相手は私が担当します。"}]
-        for test in range(ITERATION_COUNT):
-            print(f"\n--- 反復訓練: {test + 1}/{ITERATION_COUNT} ---")
-            prompt = base_prompt + selected_story_prompt + end_prompt
-            messages1 = [{"role": "system", "content": prompt}]
+        for chapter in chapters_to_test:
+            print(f"\n--- シチュエーション Chapter {chapter} のテストを開始 ---")
+
+            # --- シチュエーションごとに学習状態をリセット ---
+            try:
+                # chapter-1 でインデックスアクセス
+                persona_desc = all_persona_chapters[chapter - 1][persona_index]
+                selected_story_prompt = story_prompt[chapter - 1][0]
+            except IndexError:
+                print(f"警告: Chapter {chapter} のペルソナ定義またはストーリー定義が見つかりません。スキップします。")
+                continue
+
+            # 仮想プレイヤーの記憶を初期化
+            messages2_training = [{"role": "system", "content": player_demo_prompt + persona_desc + "それでは、会話を始めてください。会話相手は私が担当します。"}]
+
+            # --- 反復訓練ループ ---
+            print(f"\n[反復訓練 ({ITERATION_COUNT}回)]")
+            for test in range(ITERATION_COUNT):
+                print(f"\n--- 反復訓練: {test + 1}/{ITERATION_COUNT} ---")
+                prompt = base_prompt + selected_story_prompt + end_prompt
+                messages1 = [{"role": "system", "content": prompt}]
+                
+                memory = ""
+                cnt = 0
+                while True:
+                    if cnt >= TURN_LIMIT: 
+                        print(f"会話が{TURN_LIMIT}ターンに達したため、強制的に終了します。")
+                        break
+                    
+                    response2 = demo_play(messages2_training)
+                    print(f"仮想プレイヤー: {response2}\n")
+                    messages1.append({"role": "user", "content": response2})
+                    messages2_training.append({"role": "assistant", "content": response2})
+                    
+                    response1 = chat_with_gpt(messages1)
+                    print(f"会話用エージェント: {response1}\n")
+                    
+                    if "ミッション達成" in response1 or "ミッション失敗" in response1:
+                        print("ミッションが終了しました。評価に移行します。")
+                        break
+                        
+                    messages1.append({"role": "assistant", "content": response1})
+                    messages2_training.append({"role": "user", "content": response1})
+                    memory += f"プレイヤー：{response2}\nエージェント：{response1}\n"
+                    cnt += 1
+
+                # --- 評価とフィードバックの生成 ---
+                eval_content = evaluation_prompt + f"\n**[評価対象の会話ログ]**\n{memory}"
+                response_feedback = evaluation_with_gpt([{"role": "system", "content": eval_content}])
+                
+                # --- 詳細ログのファイル追記 ---
+                output_filename = os.path.join(output_dir, f"{persona_id}_evaluation_log.txt")
+                with open(output_filename, "a", encoding="utf-8") as f:
+                    f.write(f"--- Persona: {persona_id}, Chapter: {chapter}, Iteration: {test + 1} ---\n")
+                    f.write(f"[会話ログ]\n{memory}\n---\n[評価・フィードバック]\n{response_feedback}\n\n")
+
+                # --- スコアを抽出し、CSVに追記 ---
+                grammar, naturalness, logic, avg = extract_scores(response_feedback)
+                with open(summary_file_path, 'a', newline='', encoding='utf-8') as f:
+                    writer = csv.writer(f)
+                    writer.writerow([persona_id, chapter, test + 1, grammar, naturalness, logic, avg])
+
+                # --- 次の反復のためにフィードバックを仮想プレイヤーに与える ---
+                feedback_for_player = f"今回のシミュレーションは終了しました。以下のフィードバックをもとに改善してください。\nFB：{response_feedback}\nこの反省を活かして、もう一度最初から同じシチュエーションでの会話を始めてください。"
+                messages2_training.append({"role": "system", "content": feedback_for_player})
             
-            memory = ""
-            cnt = 0
-            while True:
-                if cnt >= TURN_LIMIT: 
-                    print(f"会話が{TURN_LIMIT}ターンに達したため、強制的に終了します。")
-                    break
-                response2 = demo_play(messages2_training)
-                print(f"仮想プレイヤー: {response2}\n")
-                messages1.append({"role": "user", "content": response2})
-                messages2_training.append({"role": "assistant", "content": response2})
-                response1 = chat_with_gpt(messages1)
-                print(f"会話用エージェント: {response1}\n")
-                if "ミッション達成" in response1 or "ミッション失敗" in response1:
-                    print("ミッションが終了しました。評価に移行します。")
-                    break
-                messages1.append({"role": "assistant", "content": response1})
-                messages2_training.append({"role": "user", "content": response1})
-                memory += f"プレイヤー：{response2}\nエージェント：{response1}\n"
-                cnt += 1
-
-            eval_content = evaluation_prompt + f"\n**[評価対象の会話ログ]**\n{memory}"
-            response_feedback = evaluation_with_gpt([{"role": "system", "content": eval_content}])
-            
-            with open(os.path.join(output_dir, f"{persona_id}_iteration_{test + 1}.txt"), "w", encoding="utf-8") as f:
-                f.write(f"[会話ログ]\n{memory}\n---\n[評価・フィードバック]\n{response_feedback}")
-
-            feedback_for_player = f"今回のシミュレーションは終了しました。以下のフィードバックをもとに改善してください。\nFB：{response_feedback}\nこの反省を活かして、もう一度最初から同じシチュエーションでの会話を始めてください。"
-            messages2_training.append({"role": "system", "content": feedback_for_player})
-        print("反復訓練が完了しました。")
-
-        # [事後評価]
-        print("\n[ステップ3/3: 事後評価]")
-        post_eval_prompt = base_prompt + "今回はプレイヤーの自己紹介を聞いていくつか質問をしてください。質問は3つで、趣味、特技、好きな言葉について聞いてください。自己紹介中に先に述べられていた内容については追加で聞く必要はありません。3つの質問に答えられたら「ミッション達成」とすぐに出力してください。" + end_prompt
-        messages1 = [{"role": "system", "content": post_eval_prompt}]
-        messages2_training.append({"role": "system", "content": player_demo_prompt + common_intro_desc + "それでは、自己紹介を始めてください。会話相手は私が担当します。"})
-        memory = ""
-        cnt = 0
-        while True:
-            if cnt >= TURN_LIMIT: 
-                print(f"会話が{TURN_LIMIT}ターンに達したため、強制的に終了します。")
-                break
-            response2 = demo_play(messages2_training)
-            print(f"仮想プレイヤー: {response2}\n")
-            messages1.append({"role": "user", "content": response2})
-            messages2_training.append({"role": "assistant", "content": response2})
-            response1 = chat_with_gpt(messages1)
-            print(f"会話用エージェント: {response1}\n")
-            if "ミッション達成" in response1 or "ミッション失敗" in response1:
-                print("ミッションが終了しました。評価に移行します。")
-                break
-            messages1.append({"role": "assistant", "content": response1})
-            messages2_training.append({"role": "user", "content": response1})
-            memory += f"プレイヤー：{response2}\nエージェント：{response1}\n"
-            cnt += 1
-
-        eval_content = evaluation_prompt + f"\n**[評価対象の会話ログ]**\n{memory}"
-        response_eval = evaluation_with_gpt([{"role": "system", "content": eval_content}])
-        with open(os.path.join(output_dir, f"{persona_id}_post_evaluation.txt"), "w", encoding="utf-8") as f:
-            f.write(response_eval)
-        print("事後評価が完了しました。")
+            print(f"--- シチュエーション Chapter {chapter} のテストが完了 ---")
 
         print(f"--- ペルソナ '{persona_id}' のテストが完了 ---\n")
 
